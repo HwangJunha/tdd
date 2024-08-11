@@ -1,0 +1,10 @@
+spring:
+  config:
+    activate:
+      on-profile: test
+  data:
+    redis:
+      host: tdd.databse
+      port: 6379
+      username: tdd
+      password: 1q2w3e4r

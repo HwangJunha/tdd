@@ -1,0 +1,9 @@
+spring:
+  config:
+    activate:
+      on-profile: test
+    import:
+      - classpath:config/application-database.yml
+      - classpath:config/application-jpa.yml
+      - classpath:config/application-log.yml
+      - classpath:config/application-redis.yml

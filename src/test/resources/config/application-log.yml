@@ -1,0 +1,12 @@
+spring:
+  config:
+    activate:
+      on-profile: test
+  h2:
+    console:
+      enabled: true
+logging:
+  level:
+    org.hibernate.orm.jdbc.extract: TRACE
+    org.hibernate.orm.jdbc.bind: TRACE
+

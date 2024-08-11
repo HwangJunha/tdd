@@ -1,0 +1,11 @@
+spring:
+  config:
+    activate:
+      on-profile: default
+    import:
+      - classpath:config/application-swagger.yml
+      - classpath:config/application-database.yml
+      - classpath:config/application-jpa.yml
+      - classpath:config/application-redis.yml
+server:
+  port: 80

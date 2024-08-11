@@ -1,0 +1,14 @@
+spring:
+  config:
+    activate:
+      on-profile: test
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate.format_sql: true
+      hibernate.dialect: org.hibernate.dialect.H2Dialect
+      hibernate.show_sql: true
+    database-platform: org.hibernate.dialect.H2Dialect
+    generate-ddl: true
+    database: h2

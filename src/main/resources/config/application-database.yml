@@ -1,0 +1,10 @@
+spring:
+  config:
+    activate:
+      on-profile: default
+  datasource:
+    driver-class-name: org.mariadb.jdbc.Driver
+    url: jdbc:mariadb://tdd.databse:3306/tdd
+    username: tdd
+    password: 1q2w3e4r
+    type: com.zaxxer.hikari.HikariDataSource
