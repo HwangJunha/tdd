@@ -38,7 +38,29 @@
 <ul>
     <li>단위 기능 구현전 issue를 생성해서 작업 진행</li>
     <li>코드 작성 중 요구사항 기능 명세서를 변경해야 할 상황이 온다면 issue를 작성해서 요구사항이 어떻게 변경되었는지 남겨야 한다</li>
-  </ul>
+</ul>
+<details>
+<summary>
+  issue 작성 방법
+</summary>
+   <br>
+<h2>New Issue 클릭</h2>
+  
+![createissue1](https://github.com/user-attachments/assets/17f56672-e5c6-42ba-9e32-58bc28f6b7e7)
+
+<h2>title, Labels 입력</h2>
+
+![createissue2](https://github.com/user-attachments/assets/6dcc7a46-a6b4-4efe-8c50-b4c83ef9dccd)
+
+<h2>create a branch 입력</h2>
+
+![createissue3](https://github.com/user-attachments/assets/9394286c-d4b6-4f9b-bd82-eca1b7aea59e)
+
+<h2>issue-number + "feature"로 변경</h2>
+
+![createissue4](https://github.com/user-attachments/assets/117d1df3-21fb-4f6b-ab86-e7f5cd650782)
+
+</details>
 
 <h1>PR 규칙</h1>
 <ul>
