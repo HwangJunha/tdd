@@ -1,0 +1,10 @@
+spring:
+  config:
+    activate:
+      on-profile: test
+mail:
+  protocol: ${mail.protocol}
+  host: ${mail.host}
+  port: ${mail.port}
+  username: ${mail.username}
+  password: ${mail.password}
