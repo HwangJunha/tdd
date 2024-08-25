@@ -5,11 +5,12 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Setter
 @Getter
+@Setter
 @Table(name = "Shipping")
 public class Shipping {
 
@@ -18,7 +19,7 @@ public class Shipping {
     @Column(name = "shipping_seq", nullable = false)
     private Long shippingSeq;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_seq", nullable = false)
     private Order order;
 
@@ -28,7 +29,7 @@ public class Shipping {
     @Column(name = "address")
     private String address;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shipping_status_seq", nullable = false)
     private ShippingStatus shippingStatus;
 
@@ -42,5 +43,5 @@ public class Shipping {
     private String phone;
 
     @OneToMany(mappedBy = "shipping", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<ShippingLog> shippingLogs;
+    private List<ShippingLog> shippingLogs = new ArrayList<>();  // 리스트 초기화
 }
