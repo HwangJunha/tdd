@@ -15,9 +15,9 @@ public class Board {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "board_seq", nullable = false)
-    private Integer boardSeq;
+    private Long boardSeq;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_seq", nullable = false)
     private Member member;
 
@@ -27,8 +27,8 @@ public class Board {
     @Column(name = "input_dt")
     private LocalDateTime inputDt;
 
-    @Column(name = "modify_dt")
-    private LocalDateTime modifyDt;
+    @Column(name = "update_dt")
+    private LocalDateTime updateDT;
 
     @Column(name = "views")
     private int views;

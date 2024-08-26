@@ -12,12 +12,12 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class BoardDTO {
+    private Long boardSeq;
     private  Long memberSeq;
     @NotBlank(message = "제목을 입력해주세요.")
     private String title;
-
     private String imageUrl;
-
     @NotBlank(message = "내용을 입력해주세요")
     private String content;
+
 }
