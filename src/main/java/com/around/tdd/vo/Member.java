@@ -2,14 +2,16 @@ package com.around.tdd.vo;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
+import lombok.NoArgsConstructor;
 
 import java.util.Objects;
 
 @Entity
-@Setter
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member {
 
     @Id
@@ -22,9 +24,20 @@ public class Member {
     @NotNull
     private Integer state;
 
+    @Builder
+    public Member(String id, String password, Integer state) {
+        this.id = id;
+        this.password = password;
+        this.state = state;
+    }
+
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "memberSeq", referencedColumnName = "memberSeq")
     private MemberInfo memberInfo;
+
+    public void setMemberInfo(MemberInfo memberInfo) {
+        this.memberInfo = memberInfo;
+    }
 
     @Override
     public boolean equals(Object o) {
