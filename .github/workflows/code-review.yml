@@ -20,3 +20,4 @@ jobs:
           LANGUAGE: Korean
           OPENAI_API_ENDPOINT: https://api.openai.com/v1
           MODEL: gpt-4o
+          PROMPT: ${{secrets.OPENAI_PROMPT}}
