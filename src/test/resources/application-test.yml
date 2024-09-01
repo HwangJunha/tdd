@@ -7,3 +7,5 @@ spring:
       - classpath:config/application-jpa.yml
       - classpath:config/application-log.yml
       - classpath:config/application-redis.yml
+      - classpath:config/application-email.yml
+      - classpath:config/application-auth.yml
