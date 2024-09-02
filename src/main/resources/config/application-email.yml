@@ -4,8 +4,8 @@ spring:
       on-profile: default
 
 mail:
-  protocol: ${mail.protocol}
-  host: ${mail.host}
-  port: ${mail.port}
-  username: ${mail.username}
-  password: ${mail.password}
+  protocol: ${MAIL_PROTOCOL:smtp}
+  host: ${MAIL_HOST:smtp.gmail.com}
+  port: ${MAIL_PORT:587}
+  username: ${MAIL_USERNAME:username}
+  password: ${MAIL_PASSWORD:password}
