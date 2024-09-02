@@ -7,5 +7,7 @@ spring:
       - classpath:config/application-database.yml
       - classpath:config/application-jpa.yml
       - classpath:config/application-redis.yml
+      - classpath:config/application-email.yml
+      - classpath:config/application-auth.yml
 server:
   port: 80
