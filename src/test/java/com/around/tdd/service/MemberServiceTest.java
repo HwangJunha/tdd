@@ -35,24 +35,33 @@ public class MemberServiceTest {
     @Mock
     private MemberRepository memberRepository;
 
-    @DisplayName("사용자 정보 조회")
-    void memberFindByIdTest(){
+
+    @Nested
+    class MemberFindByTest{
+        Member member;
         Long memberSeq = 1L;
         String id = "junha1";
-        String password = "!!1q2w3e4r";
-        Integer state = 1;
-        Member member = new Member();
-        member.setMemberSeq(memberSeq);
-        member.setId(id);
-        member.setPassword(password);
-        member.setState(state);
-        when(memberRepository.findById(memberSeq)).thenReturn(Optional.of(member));
+        @BeforeEach
+        void setUp() {
+            String password = "!!1q2w3e4r";
+            Integer state = 1;
+            this.member = Member.builder()
+                    .state(state)
+                    .id(id)
+                    .password(password)
+                    .build();
+        }
 
-        Optional<Member> resultMember = memberService.memberFindById(memberSeq);
-
-        assertThat(resultMember.isPresent()).isTrue();
-        assertThat(resultMember.get().getId()).isEqualTo(id);
+        @Test
+        @DisplayName("사용자 정보 조회")
+        void memberFindByIdTest() {
+            when(memberRepository.findById(memberSeq)).thenReturn(Optional.of(member));
+            Optional<Member> resultMember = memberService.memberFindById(memberSeq);
+            assertThat(resultMember.isPresent()).isTrue();
+            assertThat(resultMember.get().getId()).isEqualTo(id);
+        }
     }
+
     @Nested
     class CheckPassword{
         private String failPassword;
