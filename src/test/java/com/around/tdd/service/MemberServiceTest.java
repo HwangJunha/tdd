@@ -15,6 +15,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -34,7 +35,24 @@ public class MemberServiceTest {
     @Mock
     private MemberRepository memberRepository;
 
+    @DisplayName("사용자 정보 조회")
+    void memberFindByIdTest(){
+        Long memberSeq = 1L;
+        String id = "junha1";
+        String password = "!!1q2w3e4r";
+        Integer state = 1;
+        Member member = new Member();
+        member.setMemberSeq(memberSeq);
+        member.setId(id);
+        member.setPassword(password);
+        member.setState(state);
+        when(memberRepository.findById(memberSeq)).thenReturn(Optional.of(member));
 
+        Optional<Member> resultMember = memberService.memberFindById(memberSeq);
+
+        assertThat(resultMember.isPresent()).isTrue();
+        assertThat(resultMember.get().getId()).isEqualTo(id);
+    }
     @Nested
     class CheckPassword{
         private String failPassword;
@@ -147,13 +165,5 @@ public class MemberServiceTest {
             assertEquals("junha", savedMember.getMemberInfo().getName());
             verify(memberRepository, times(1)).save(member);
         }
-
-
     }
-
-
-
-
-
-
 }
