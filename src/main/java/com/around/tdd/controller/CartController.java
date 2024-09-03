@@ -1,6 +1,7 @@
 package com.around.tdd.controller;
 
 import com.around.tdd.service.CartService;
+import com.around.tdd.vo.CartItemRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -25,7 +26,8 @@ public class CartController {
     )
     @PostMapping("/cart-add")
     public ResponseEntity<String> addItemToCart(@RequestBody CartItemRequest request) {
-        cartService.saveProductItem(request);
+        cartService.saveProductCartItem(request);
+
         return ResponseEntity.ok("Item added to cart");
     }
 

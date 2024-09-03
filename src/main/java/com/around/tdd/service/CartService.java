@@ -1,5 +1,6 @@
 package com.around.tdd.service;
 
+import com.around.tdd.vo.CartItemRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -8,6 +9,6 @@ import org.springframework.stereotype.Service;
 public class CartService {
 
 
-    public void saveProductItem(CartItemRequest request) {
+    public void saveProductCartItem(CartItemRequest request) {
     }
 }
