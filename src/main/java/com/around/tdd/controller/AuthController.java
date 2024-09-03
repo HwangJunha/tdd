@@ -6,7 +6,7 @@ import com.around.tdd.service.MemberService;
 import com.around.tdd.util.HttpUtil;
 import com.around.tdd.vo.MailDto;
 import com.around.tdd.vo.Member;
-import com.around.tdd.vo.MemberRequest;
+import com.around.tdd.vo.request.AuthRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -39,14 +39,14 @@ public class AuthController {
         }
     )
     @PostMapping("/auth-number")
-    public ResponseEntity<String> authNumber(@RequestBody MemberRequest memberRequest) {
-        Optional<Member> optionalMember = memberService.memberFindById(memberRequest.getMemberSeq());
+    public ResponseEntity<String> authNumber(@RequestBody AuthRequest authRequest) {
+        Optional<Member> optionalMember = memberService.memberFindById(authRequest.getMemberSeq());
         if(!optionalMember.isPresent()) {
             return new ResponseEntity<>("사용자 정보가 없음",HttpUtil.createJsonHeaders(), HttpStatus.NO_CONTENT);
         }
         Member member = optionalMember.get();
         String authNumber = authService.getAuthNumber();
-        authService.saveAuth("auth-member:"+memberRequest.getMemberSeq(), authNumber);
+        authService.saveAuth("auth-member:"+ authRequest.getMemberSeq(), authNumber);
         emailSendService.sendSimpleMessage(new MailDto("tdd@gmail.com", member.getMemberInfo().getEmail(), "인증번호", "인증번호:"+authNumber));
         return new ResponseEntity<>("인증번호 저장 성공",HttpUtil.createJsonHeaders(), HttpStatus.CREATED);
     }
@@ -60,15 +60,15 @@ public class AuthController {
         }
     )
     @PostMapping("/auth-check")
-    public ResponseEntity<String> authCheck(@RequestBody MemberRequest memberRequest) {
-        boolean authCheck = authService.matchAuth("auth-member:"+memberRequest.getMemberSeq(), memberRequest.getAuthNumber());
+    public ResponseEntity<String> authCheck(@RequestBody AuthRequest authRequest) {
+        boolean authCheck = authService.matchAuth("auth-member:"+ authRequest.getMemberSeq(), authRequest.getAuthNumber());
         if(!authCheck){
             return new ResponseEntity<>(String.valueOf(false),HttpUtil.createJsonHeaders(), HttpStatus.NO_CONTENT);
         }
 
-        String token = authService.getToken(memberRequest.getMemberSeq().intValue());
+        String token = authService.getToken(authRequest.getMemberSeq().intValue());
 
-        authService.saveAuth("auth-token:"+memberRequest.getMemberSeq(), token);
+        authService.saveAuth("auth-token:"+ authRequest.getMemberSeq(), token);
         return new ResponseEntity<>(token,HttpUtil.createJsonHeaders(), HttpStatus.CREATED);
     }
 
@@ -82,8 +82,8 @@ public class AuthController {
     )
     @GetMapping("/auth-token-check")
     public ResponseEntity<String> authTokenCheck(
-            @RequestParam Long memberSeq,
-            @RequestParam String authToken
+            @RequestParam(value="memberSeq") Long memberSeq,
+            @RequestParam(value="authToken") String authToken
     ) {
         boolean authCheck = authService.matchAuth("auth-token:"+memberSeq, authToken);
         return new ResponseEntity<>(String.valueOf(authCheck), HttpUtil.createJsonHeaders(), authCheck ? HttpStatus.OK : HttpStatus.NO_CONTENT);

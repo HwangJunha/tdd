@@ -7,8 +7,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
-import java.util.Optional;
-
 @Service
 @RequiredArgsConstructor
 public class MemberService {
@@ -34,6 +32,11 @@ public class MemberService {
         return memberRepository.countById(id).intValue() > 0 ? false : true;
     }
 
+    /**
+     * 사용자 입력
+     * @param member - 입력될 사용자
+     * @return 입력된 값 반환
+     */
     public Member insertMemberInfo(Member member){
         return memberRepository.save(member);
     }
@@ -46,6 +49,5 @@ public class MemberService {
     public Optional<Member> memberFindById(Long memberSeq){
         return memberRepository.findById(memberSeq);
     }
-
 
 }

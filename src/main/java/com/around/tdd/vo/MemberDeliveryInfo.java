@@ -14,7 +14,7 @@ public class MemberDeliveryInfo {
 
     @Id
     @GeneratedValue
-    private Long member_delivery_seq;
+    private Long memberDeliverySeq;
     private String name;
     private String phone;
     private String email;
@@ -22,6 +22,8 @@ public class MemberDeliveryInfo {
     private String address;
     private String detailAddress;
     private String post;
+
+    @JoinColumn
     private Long memberSeq;
 
     @Builder
@@ -35,9 +37,5 @@ public class MemberDeliveryInfo {
         this.post = post;
         this.memberSeq = memberSeq;
     }
-
-    @ManyToOne
-    private Member member;
-
 
 }

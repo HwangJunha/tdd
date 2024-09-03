@@ -70,13 +70,34 @@ class MemberRepositoryTest {
                     .post("08755")
                     .build();
 
-            this.member.setMemberDeliveryInfo(List.of(memberDeliveryInfo));
-            List<Member> resultMember = memberRepository.findAll();
+            MemberDeliveryInfo memberDeliveryInfo2 = MemberDeliveryInfo
+                    .builder()
+                    .name("황준하2")
+                    .phone("01084282511")
+                    .email("tarot10@naver.com")
+                    .nick("tarot1415")
+                    .address("서울특별시 관악구 신림동 1415-10")
+                    .detailAddress("아덴빌 204호")
+                    .post("08755")
+                    .build();
+
+            MemberDeliveryInfo memberDeliveryInfo3 = MemberDeliveryInfo
+                    .builder()
+                    .name("황준하3")
+                    .phone("01084282511")
+                    .email("tarot10@naver.com")
+                    .nick("tarot1415")
+                    .address("서울특별시 관악구 신림동 1415-10")
+                    .detailAddress("아덴빌 204호")
+                    .post("08755")
+                    .build();
+
+            this.member.setMemberDeliveryInfo(List.of(memberDeliveryInfo, memberDeliveryInfo2, memberDeliveryInfo3));
             Member savedMember = memberRepository.save(member);
-            System.out.println("savedMember:"+savedMember.toString());
-
+            List<Member> resultMember = memberRepository.findAll();
+            assertThat(resultMember.get(0).getMemberDeliveryInfo().size()).isEqualTo(3);
+            assertThat(resultMember.get(0)).isEqualTo(member);
         }
-
     }
 
 

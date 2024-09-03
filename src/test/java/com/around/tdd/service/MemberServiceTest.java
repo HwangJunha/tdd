@@ -2,6 +2,7 @@ package com.around.tdd.service;
 
 import com.around.tdd.repository.MemberRepository;
 import com.around.tdd.vo.Member;
+import com.around.tdd.vo.MemberDeliveryInfo;
 import com.around.tdd.vo.MemberInfo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -11,10 +12,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -24,8 +24,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 
-@ActiveProfiles("test")
-@TestPropertySource(locations = "classpath:application-test.yml")
 @ExtendWith(MockitoExtension.class)
 public class MemberServiceTest {
 
@@ -133,6 +131,8 @@ public class MemberServiceTest {
     class InsertMember{
         private Member member;
         private MemberInfo memberInfo;
+        private List<MemberDeliveryInfo> memberDeliveryInfoList;
+
 
         @BeforeEach
         void setUp(){
@@ -147,7 +147,27 @@ public class MemberServiceTest {
             this.memberInfo.setAddress("서울시 관악구 신림동 1415-10");
             this.memberInfo.setDetailAddress("아덴빌 104호");
             this.memberInfo.setPost("088450");
+            MemberDeliveryInfo memberDeliveryInfo1 = MemberDeliveryInfo
+                    .builder()
+                    .name("황준하")
+                    .phone("01084282511")
+                    .email("tarot10@naver.com")
+                    .nick("tarot1415")
+                    .address("서울특별시 관악구 신림동 1415-10")
+                    .detailAddress("아덴빌 204호")
+                    .post("08755")
+                    .build();
 
+            MemberDeliveryInfo memberDeliveryInfo2 = MemberDeliveryInfo
+                    .builder()
+                    .name("황준하2")
+                    .phone("01084282511")
+                    .email("tarot10@naver.com")
+                    .nick("tarot1415")
+                    .address("서울특별시 관악구 신림동 1415-10")
+                    .detailAddress("아덴빌 204호")
+                    .post("08755")
+                    .build();
 
             member = Member
                     .builder()
@@ -155,23 +175,35 @@ public class MemberServiceTest {
                     .password("!!1q2w3e4r")
                     .state(1)
                     .build();
-
+            memberDeliveryInfoList = List.of(memberDeliveryInfo1, memberDeliveryInfo2);
             member.setMemberInfo(this.memberInfo);
+            member.setMemberDeliveryInfo(memberDeliveryInfoList);
         }
 
         @Test
         @DisplayName("insert memberInfo 테스트")
-        void insertTest(){
+        void insertMemberInfoTest(){
             when(memberRepository.save(any(Member.class))).thenReturn(member);
-
             Member savedMember = memberService.insertMemberInfo(member);
-
-
             assertNotNull(savedMember);
             assertEquals("tarot1415", savedMember.getId());
             assertEquals("!!1q2w3e4r", savedMember.getPassword());
             assertNotNull(savedMember.getMemberInfo());
             assertEquals("junha", savedMember.getMemberInfo().getName());
+            verify(memberRepository, times(1)).save(member);
+        }
+
+        @Test
+        @DisplayName("insert memberDeliveryInfo 테스트")
+        void insertMemberDeliveryInfoTest(){
+            when(memberRepository.save(any(Member.class))).thenReturn(member);
+            Member savedMember = memberService.insertMemberInfo(member);
+            assertNotNull(savedMember);
+            assertEquals("tarot1415", savedMember.getId());
+            assertEquals("!!1q2w3e4r", savedMember.getPassword());
+            assertNotNull(savedMember.getMemberDeliveryInfo());
+            assertEquals("황준하", savedMember.getMemberDeliveryInfo().getFirst().getName());
+            assertThat(savedMember.getMemberDeliveryInfo().size()).isEqualTo(2);
             verify(memberRepository, times(1)).save(member);
         }
     }
