@@ -58,8 +58,8 @@ class AuthControllerTest {
         // given
         MemberRequest memberRequest = new MemberRequest();
         memberRequest.setMemberSeq(1L);
-        Member member = new Member();
-        member.setMemberSeq(1L);
+        Member member = Member.builder().build();
+
         String content = objectMapper.writeValueAsString(memberRequest);
 
         MemberInfo memberInfo = new MemberInfo();

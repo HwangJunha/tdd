@@ -2,16 +2,15 @@ package com.around.tdd.vo;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
+import java.util.List;
 import java.util.Objects;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ToString
 public class Member {
 
     @Id
@@ -35,9 +34,10 @@ public class Member {
     @JoinColumn(name = "memberSeq", referencedColumnName = "memberSeq")
     private MemberInfo memberInfo;
 
-    public void setMemberInfo(MemberInfo memberInfo) {
-        this.memberInfo = memberInfo;
-    }
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "memberSeq", referencedColumnName = "memberSeq")
+    private List<MemberDeliveryInfo> memberDeliveryInfo;
+
 
     @Override
     public boolean equals(Object o) {
@@ -50,5 +50,13 @@ public class Member {
     @Override
     public int hashCode() {
         return Objects.hash(memberSeq, id, password);
+    }
+
+    public void setMemberInfo(MemberInfo memberInfo) {
+        this.memberInfo = memberInfo;
+    }
+
+    public void setMemberDeliveryInfo(List<MemberDeliveryInfo> memberDeliveryInfo) {
+        this.memberDeliveryInfo = memberDeliveryInfo;
     }
 }
