@@ -2,9 +2,7 @@ package com.around.tdd.vo;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -15,22 +13,21 @@ import java.util.List;
 @Entity
 public class Category {
 
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     private Long categorySeq;
 
+    @Column(nullable = false)
     private String name;
 
+    @Column(nullable = false)
     private Integer depth;
 
+    @Column(nullable = false)
     private Integer sort;
 
-    @Column(columnDefinition = "enum('y', 'n') default 'y'")
+    @Column(nullable = false, columnDefinition = "enum('y', 'n') default 'y'")
     private Character displayYn;
-
-    @CreationTimestamp // insert 시 현재 시각 입력
-    @Column(name = "create_dt")
-    private LocalDateTime createDateTime;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_category_seq")

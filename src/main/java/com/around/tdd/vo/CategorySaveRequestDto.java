@@ -1,7 +1,7 @@
 package com.around.tdd.vo;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,13 +15,12 @@ public class CategorySaveRequestDto {
     @Size(message = "카테고리명 1 ~ 100자 이내", min = 1, max = 100)
     private String name;
 
-    @NotBlank(message = "카테고리 깊이 미입력")
+    @NotNull(message = "카테고리 깊이 미입력")
     private Integer depth;
 
-    @Pattern(regexp = "^[YN]$")
     private Character displayYn;
 
-    @NotBlank(message = "정렬 순서 미입력")
+    @NotNull(message = "정렬 순서 미입력")
     private Integer sort;
 
     private Long parentCategorySeq;
