@@ -1,5 +1,6 @@
 package com.around.tdd.service;
 
+import com.around.tdd.exception.DuplicateCategoryException;
 import com.around.tdd.repository.CategoryRepository;
 import com.around.tdd.vo.Category;
 import com.around.tdd.vo.CategorySaveRequestDto;
@@ -18,6 +19,12 @@ public class CategoryService {
 
     @Transactional
     public Long saveCategory(CategorySaveRequestDto categoryDto) {
+
+        // 카테고리 중복 검증
+        if (categoryRepository.existsByName(categoryDto.getName())) {
+            throw new DuplicateCategoryException("중복 카테고리 : " + categoryDto.getName());
+        }
+
         // DTO 엔티티 변환
         Category category = categoryDto.toEntity();
 

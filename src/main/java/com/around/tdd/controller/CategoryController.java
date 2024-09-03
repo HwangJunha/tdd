@@ -2,6 +2,7 @@ package com.around.tdd.controller;
 
 import com.around.tdd.controller.response.ApiResponse;
 import com.around.tdd.controller.response.ErrorResponse;
+import com.around.tdd.exception.DuplicateCategoryException;
 import com.around.tdd.service.CategoryService;
 import com.around.tdd.vo.CategorySaveRequestDto;
 import jakarta.validation.Valid;
@@ -40,8 +41,8 @@ public class CategoryController {
         Map<String, Object> responseData = new HashMap<>();
         responseData.put("savedCategorySeq", savedCategorySeq);
 
-        ApiResponse response = new ApiResponse(responseData, "카테고리 저장 성공", HttpStatus.OK.value());
-        return new ResponseEntity<>(response, headers, HttpStatus.OK);
+        ApiResponse response = new ApiResponse(responseData, "카테고리 저장 성공", HttpStatus.CREATED.value());
+        return new ResponseEntity<>(response, headers, HttpStatus.CREATED);
     }
 
     // Validation 예외 처리
@@ -73,13 +74,26 @@ public class CategoryController {
     public ResponseEntity<ErrorResponse> handleException(Exception ex, WebRequest request) {
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "An unexpected error occurred",
+                "예기치 못한 오류 발생",
                 LocalDateTime.now(),
                 request.getDescription(false),
                 Map.of("error", ex.getMessage())
         );
 
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    // 중복 카테고리 예외처리
+    @ExceptionHandler(DuplicateCategoryException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateCatgoryException(DuplicateCategoryException ex, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                "중복된 카테고리입니다.",
+                LocalDateTime.now(),
+                request.getDescription(false),
+                Map.of("error", ex.getMessage())
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
 
 }

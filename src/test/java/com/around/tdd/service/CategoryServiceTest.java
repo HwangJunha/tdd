@@ -1,5 +1,6 @@
 package com.around.tdd.service;
 
+import com.around.tdd.exception.DuplicateCategoryException;
 import com.around.tdd.repository.CategoryRepository;
 
 import com.around.tdd.vo.Category;
@@ -13,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.ActiveProfiles;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -54,5 +56,20 @@ class CategoryServiceTest {
 
         // then
         assertThat(savedCategorySeq).isEqualTo(categorySeq);
+    }
+
+    @DisplayName("카테고리 중복 등록 오류")
+    @Test
+    void duplicateCategoryFailed() {
+        // given
+        String name = "테스트 카테고리";
+        CategorySaveRequestDto categoryDto = new CategorySaveRequestDto();
+        categoryDto.setName(name);
+
+        // when
+        when(categoryRepository.existsByName(name)).thenReturn(true);
+
+        // then
+        assertThrows(DuplicateCategoryException.class, () -> categoryService.saveCategory(categoryDto));
     }
 }
