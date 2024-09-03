@@ -56,7 +56,7 @@ public class ShippingServiceTest {
         Shipping shipping = new Shipping();
         shipping.setOrder(savedOrder);  // 저장된 Order를 설정
         shipping.setShippingDt(LocalDateTime.now());
-        shipping.setAddress("강서구 화곡동 432-28");
+        shipping.setAddress("강서구 화곡동 423-28");
         shipping.setDetailAddress("B03호");
         shipping.setPost("12345");
         shipping.setPhone("010-2988-1162");

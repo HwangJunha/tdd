@@ -1,8 +1,7 @@
 package com.around.tdd.vo;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -11,6 +10,9 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Table(name = "Shipping")
 public class Shipping {
 
@@ -44,4 +46,5 @@ public class Shipping {
 
     @OneToMany(mappedBy = "shipping", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<ShippingLog> shippingLogs = new ArrayList<>();  // 리스트 초기화
+
 }
