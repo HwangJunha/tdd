@@ -45,6 +45,7 @@ public class Shipping {
     private String phone;
 
     @OneToMany(mappedBy = "shipping", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
     private List<ShippingLog> shippingLogs = new ArrayList<>();  // 리스트 초기화
 
 }

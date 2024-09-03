@@ -1,14 +1,16 @@
 package com.around.tdd.vo;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.List;
 
 @Entity
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 @Table(name = "ShippingStatus")
 public class ShippingStatus {
 
