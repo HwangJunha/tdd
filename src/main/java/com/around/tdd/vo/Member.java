@@ -24,7 +24,8 @@ public class Member {
     private Integer state;
 
     @Builder
-    public Member(String id, String password, Integer state) {
+    public Member(Long memberSeq, String id, String password, Integer state) {
+        this.memberSeq = memberSeq;
         this.id = id;
         this.password = password;
         this.state = state;

@@ -1,4 +1,4 @@
-package com.around.tdd.vo.response;
+package com.around.tdd.controller.response;
 
 import com.around.tdd.vo.Member;
 

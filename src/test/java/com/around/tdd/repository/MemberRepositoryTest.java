@@ -32,8 +32,7 @@ class MemberRepositoryTest {
         private Member member;
         @BeforeEach
         void setUp(){
-            this.member = new Member("junha1", "!!1q2w3e4r", 1);
-
+            this.member = new Member(1L,"junha1", "!!1q2w3e4r", 1);
         }
 
         @DisplayName("회원 입력 및 조회 테스트")

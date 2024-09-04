@@ -1,9 +1,9 @@
 package com.around.tdd.controller;
 
+import com.around.tdd.controller.response.MemberResponse;
 import com.around.tdd.service.MemberService;
 import com.around.tdd.util.HttpUtil;
 import com.around.tdd.vo.Member;
-import com.around.tdd.vo.response.MemberResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -35,7 +35,7 @@ public class MemberController {
     }
     )
     @GetMapping("/member")
-    public ResponseEntity<MemberResponse> memberHandler(
+    public ResponseEntity<MemberResponse> memberFindByIdHandler(
             @RequestParam(value ="memberSeq") Long memberSeq
     ) {
         Optional<Member> member = memberService.memberFindById(memberSeq);
