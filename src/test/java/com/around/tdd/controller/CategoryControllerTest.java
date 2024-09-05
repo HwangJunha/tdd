@@ -62,7 +62,7 @@ class CategoryControllerTest {
                         .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
-                .andExpect(jsonPath("$.message").value("카테고리 검증 오류"))
+                .andExpect(jsonPath("$.message").value("categorySaveRequest 검증 오류"))
                 .andExpect(jsonPath("$.errors.length()").value(3));
     }
 
