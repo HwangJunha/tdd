@@ -2,18 +2,18 @@ package com.around.tdd.controller;
 
 import com.around.tdd.exception.DuplicateCategoryException;
 import com.around.tdd.service.CategoryService;
-import com.around.tdd.vo.CategorySaveRequestDto;
+import com.around.tdd.vo.CategorySaveRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -38,21 +38,14 @@ class CategoryControllerTest {
     @Test
     void saveCategorySuccess() throws Exception {
         // given
-        String name = "테스트 카테고리";
-        int sort = 1;
-        int depth = 1;
-
-        CategorySaveRequestDto requestDto = new CategorySaveRequestDto();
-        requestDto.setName(name);
-        requestDto.setSort(sort);
-        requestDto.setDepth(depth);
+        CategorySaveRequest categoryRequest = createCategorySaveRequest("테스트 카테고리", 1, 1);
 
         // when & then
         mockMvc.perform(post(baseUrl + "/save")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(requestDto)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value(200))
+                .content(objectMapper.writeValueAsString(categoryRequest)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value(HttpStatus.CREATED.name()))
                 .andExpect(jsonPath("$.message").value("카테고리 저장 성공"));
 
     }
@@ -61,14 +54,14 @@ class CategoryControllerTest {
     @Test
     void saveCategoryValidationFailed() throws Exception {
         // given
-        CategorySaveRequestDto requestDto = new CategorySaveRequestDto();
+        CategorySaveRequest requestDto = new CategorySaveRequest();
 
         // when & then
         mockMvc.perform(post(baseUrl + "/save")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
                 .andExpect(jsonPath("$.message").value("카테고리 검증 오류"))
                 .andExpect(jsonPath("$.errors.length()").value(3));
     }
@@ -77,23 +70,28 @@ class CategoryControllerTest {
     @Test
     void duplicateCategoryFailed() throws Exception {
         // given
-        when(categoryService.saveCategory(any(CategorySaveRequestDto.class)))
+        when(categoryService.saveCategory(any(CategorySaveRequest.class)))
                 .thenThrow(new DuplicateCategoryException("중복된 카테고리입니다."));
 
-        CategorySaveRequestDto categoryDto = new CategorySaveRequestDto();
-        categoryDto.setName("테스트 카테고리");
-        categoryDto.setSort(1);
-        categoryDto.setDepth(1);
+        CategorySaveRequest categoryRequest = createCategorySaveRequest("테스트 카테고리", 1, 1);
 
         // when & then
         mockMvc.perform(post(baseUrl + "/save")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(categoryDto)))
+                .content(objectMapper.writeValueAsString(categoryRequest)))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message").value("중복된 카테고리입니다."));
 
         // categoryService.saveCategory 메서드가 한번 호출되었는지 검증
-        verify(categoryService, times(1)).saveCategory(any(CategorySaveRequestDto.class));
+        verify(categoryService, times(1)).saveCategory(any(CategorySaveRequest.class));
+    }
+
+    private CategorySaveRequest createCategorySaveRequest(String name, Integer sort, Integer depth) {
+        CategorySaveRequest categoryRequest = new CategorySaveRequest();
+        categoryRequest.setName(name);
+        categoryRequest.setSort(sort);
+        categoryRequest.setDepth(depth);
+        return categoryRequest;
     }
 
 }

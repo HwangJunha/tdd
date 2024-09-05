@@ -4,7 +4,7 @@ import com.around.tdd.exception.DuplicateCategoryException;
 import com.around.tdd.repository.CategoryRepository;
 
 import com.around.tdd.vo.Category;
-import com.around.tdd.vo.CategorySaveRequestDto;
+import com.around.tdd.vo.CategorySaveRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,16 +43,12 @@ class CategoryServiceTest {
                                         .depth(depth)
                                         .sort(sort).build();
 
-        CategorySaveRequestDto categoryDto = new CategorySaveRequestDto();
-        categoryDto.setCategorySeq(categorySeq);
-        categoryDto.setName(name);
-        categoryDto.setDepth(depth);
-        categoryDto.setSort(sort);
+        CategorySaveRequest categoryRequest = createCategorySaveRequest(categorySeq, name, depth, sort);
 
         when(categoryRepository.save(any(Category.class))).thenReturn(category);
 
         // when
-        Long savedCategorySeq = categoryService.saveCategory(categoryDto);
+        Long savedCategorySeq = categoryService.saveCategory(categoryRequest);
 
         // then
         assertThat(savedCategorySeq).isEqualTo(categorySeq);
@@ -63,13 +59,21 @@ class CategoryServiceTest {
     void duplicateCategoryFailed() {
         // given
         String name = "테스트 카테고리";
-        CategorySaveRequestDto categoryDto = new CategorySaveRequestDto();
-        categoryDto.setName(name);
+        CategorySaveRequest categoryRequest = createCategorySaveRequest(null, name, null, null);
 
         // when
         when(categoryRepository.existsByName(name)).thenReturn(true);
 
         // then
-        assertThrows(DuplicateCategoryException.class, () -> categoryService.saveCategory(categoryDto));
+        assertThrows(DuplicateCategoryException.class, () -> categoryService.saveCategory(categoryRequest));
+    }
+
+    private CategorySaveRequest createCategorySaveRequest(Long categorySeq, String name, Integer sort, Integer depth) {
+        CategorySaveRequest categoryRequest = new CategorySaveRequest();
+        categoryRequest.setCategorySeq(categorySeq);
+        categoryRequest.setName(name);
+        categoryRequest.setSort(sort);
+        categoryRequest.setDepth(depth);
+        return categoryRequest;
     }
 }

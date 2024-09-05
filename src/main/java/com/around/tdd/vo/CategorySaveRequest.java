@@ -8,7 +8,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class CategorySaveRequestDto {
+public class CategorySaveRequest {
     private Long categorySeq;
 
     @NotBlank(message = "카테고리명 미입력")
