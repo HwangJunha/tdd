@@ -1,20 +1,23 @@
 package com.around.tdd.controller.response;
 
 import lombok.Getter;
-import lombok.Setter;
+import lombok.ToString;
+import org.springframework.http.HttpStatus;
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 
 @Getter
-@Setter
-public class ApiResponse {
-    private Map<String, Object> data;
-    private String message;
-    private int status;
+@ToString
+public final class ApiResponse<T> {
+    private final Map<String, T> data;
+    private final String message;
+    private final HttpStatus status;
 
-    public ApiResponse(Map<String, Object> data, String message, int status) {
-        this.data = data;
-        this.message = message;
-        this.status = status;
+    public ApiResponse(Map<String, T> data, String message, HttpStatus status) {
+        this.data = Objects.requireNonNullElse(data, Collections.emptyMap());
+        this.message = Objects.requireNonNull(message, "message cannot be null");
+        this.status = Objects.requireNonNull(status, "status cannot be null");
     }
 }
