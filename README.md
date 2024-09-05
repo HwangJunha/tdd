@@ -69,10 +69,10 @@
   </ul>
 <h1>환경변수 설정</h1>
 <ul>
-    <li>auth.salt로 이름을 지정하고 salt값을 세팅한다. salt값은 추후 공유 예정</li>
-    <li>이메일 관련을 설정한다 mail.protocol, mail.host, mail.port, mail.username, mail.password</li>
+    <li>AUTH_SALT로 이름을 지정하고 salt값을 세팅한다. salt값은 추후 공유 예정</li>
+    <li>이메일 관련을 설정한다 MAIL_PROTOCOL, MAIL_HOST, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD</li>
     <li>구글 예시</li>
     <li>gmail에서 설정 > 전달 및 POP/IMAP에서 IMAP 활성화</li>
     <li>앱 비밀번호 설정: https://support.google.com/accounts/answer/185833?hl=ko</li>
-    <li>ex) mail.protocol=smtp, mail.host=smtp.gmail.com, mail.port=587, mail.username="자신의 아이디", mail.password="설정한 앱 비밀번호"</li>
+    <li>ex) MAIL_PROTOCOL=smtp, MAIL_HOST=smtp.gmail.com, MAIL_PORT=587, MAIL_USERNAME="자신의 아이디", MAIL_PASSWORD="설정한 앱 비밀번호"</li>
   </ul>

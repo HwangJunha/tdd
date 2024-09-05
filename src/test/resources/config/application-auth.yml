@@ -4,4 +4,4 @@ spring:
       on-profile: test
 
 auth-property:
-  salt: ${auth.salt}
+  salt: ${AUTH_SALT:tdd}
