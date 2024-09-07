@@ -1,45 +1,59 @@
 package com.around.tdd.vo;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @Setter
+@NoArgsConstructor
 public class MemberInfo {
 
     @Id
-    @GeneratedValue
-    private Integer memberSeq;
+    private Long memberSeq;
 
-    @OneToOne(mappedBy = "memberInfo")
+
+    @MapsId
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_seq")
     private Member member;
 
+    @NotNull
     private String socialNumber;
-
+    @NotNull
     private String name;
-
+    @NotNull
     private String phone;
-
     @Email
     private String email;
-
+    @NotNull
     private String nick;
-
+    @NotNull
     private String gender;
-
+    @NotNull
     private LocalDateTime birth;
-
+    @NotNull
     private String address;
-
+    @NotNull
     private String detailAddress;
-
+    @NotNull
     private String post;
+
+    @Builder
+    public MemberInfo(String socialNumber, String name, String phone, String email, String nick, String gender, LocalDateTime birth, String address, String detailAddress, String post) {
+        this.socialNumber = socialNumber;
+        this.name = name;
+        this.phone = phone;
+        this.email = email;
+        this.nick = nick;
+        this.gender = gender;
+        this.birth = birth;
+        this.address = address;
+        this.detailAddress = detailAddress;
+        this.post = post;
+    }
 }

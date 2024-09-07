@@ -8,13 +8,14 @@ import java.util.List;
 import java.util.Objects;
 
 @Entity
+@Table(name = "member")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @ToString
 public class Member {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long memberSeq;
     @NotNull
     private String id;
@@ -24,19 +25,16 @@ public class Member {
     private Integer state;
 
     @Builder
-    public Member(Long memberSeq, String id, String password, Integer state) {
-        this.memberSeq = memberSeq;
+    public Member(String id, String password, Integer state) {
         this.id = id;
         this.password = password;
         this.state = state;
     }
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "memberSeq", referencedColumnName = "memberSeq")
+    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private MemberInfo memberInfo;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "memberSeq", referencedColumnName = "memberSeq")
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<MemberDeliveryInfo> memberDeliveryInfo;
 
 

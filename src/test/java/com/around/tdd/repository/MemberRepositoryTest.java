@@ -32,7 +32,13 @@ class MemberRepositoryTest {
         private Member member;
         @BeforeEach
         void setUp(){
-            this.member = new Member(1L,"junha1", "!!1q2w3e4r", 1);
+
+            this.member = Member
+                    .builder()
+                    .id("tarot1415")
+                    .password("!!1q2w3e4r")
+                    .state(1)
+                    .build();
         }
 
         @DisplayName("회원 입력 및 조회 테스트")

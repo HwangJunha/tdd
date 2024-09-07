@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 public class MemberDeliveryInfo {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long memberDeliverySeq;
     private String name;
     private String phone;
@@ -23,11 +23,12 @@ public class MemberDeliveryInfo {
     private String detailAddress;
     private String post;
 
-    @JoinColumn
-    private Long memberSeq;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_seq")
+    private Member member;
 
     @Builder
-    public MemberDeliveryInfo(String name, String phone, String email, String nick, String address, String detailAddress, String post, Long memberSeq){
+    public MemberDeliveryInfo(String name, String phone, String email, String nick, String address, String detailAddress, String post){
         this.name = name;
         this.phone = phone;
         this.email = email;
@@ -35,7 +36,9 @@ public class MemberDeliveryInfo {
         this.address = address;
         this.detailAddress = detailAddress;
         this.post = post;
-        this.memberSeq = memberSeq;
     }
 
+    public void setMember(Member member) {
+        this.member = member;
+    }
 }

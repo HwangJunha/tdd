@@ -81,13 +81,12 @@ class MemberControllerTest {
 
             when(memberService.memberFindById(0L)).thenReturn(Optional.empty());
             // When & Then
-            mockMvc.perform(MockMvcRequestBuilders.get(baseUrl+"/member")
+            mockMvc.perform(MockMvcRequestBuilders.get(baseUrl + "/member")
                             .contentType(MediaType.APPLICATION_JSON)
                             .params(params)
                     )
                     .andExpect(status().isNoContent());
             verify(memberService).memberFindById(0L);
         }
-
     }
 }
