@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +21,8 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @Tag(name = "Member", description = "Member 관련 API 입니다.")
 public class MemberController {
+
+    private final HttpHeaders JSON_HEADERS = HttpUtil.createJsonHeaders();
 
     private final MemberService memberService;
 
@@ -39,7 +42,7 @@ public class MemberController {
         if(member.isEmpty()){
             return new ResponseEntity<>(HttpUtil.createJsonHeaders(), HttpStatus.NO_CONTENT);
         }
-        return new ResponseEntity<>(new MemberResponse(member.get()),HttpUtil.createJsonHeaders(), HttpStatus.OK);
+        return new ResponseEntity<>(new MemberResponse(member.get()),JSON_HEADERS, HttpStatus.OK);
     }
 
     @PostMapping("/member")
@@ -54,7 +57,7 @@ public class MemberController {
         MemberInfo memberInfo = memberRequest.fromMemberInfo();
         memberInfo.setMember(member);
         member.setMemberInfo(memberInfo);
-        return new ResponseEntity<>(new MemberResponse(memberService.insertMemberInfo(member)),HttpUtil.createJsonHeaders(), HttpStatus.OK);
+        return new ResponseEntity<>(new MemberResponse(memberService.insertMemberInfo(member)),JSON_HEADERS, HttpStatus.OK);
     }
 
     @PostMapping("/member-delivery-info")
@@ -69,7 +72,7 @@ public class MemberController {
         member.setMemberDeliveryInfo(memberRequest.fromMemberDeliveryInfo());
         member.getMemberDeliveryInfo().forEach(memberDeliveryInfo -> memberDeliveryInfo.setMember(member));
         var savedMember = memberService.insertMemberInfo(member);
-        return new ResponseEntity<>(new MemberResponse(savedMember), HttpUtil.createJsonHeaders(), HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(new MemberResponse(savedMember), JSON_HEADERS, HttpStatus.NO_CONTENT);
     }
 
 
