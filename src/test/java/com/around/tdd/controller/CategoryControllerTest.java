@@ -2,7 +2,9 @@ package com.around.tdd.controller;
 
 import com.around.tdd.exception.DuplicateCategoryException;
 import com.around.tdd.service.CategoryService;
+import com.around.tdd.vo.CategoryResponse;
 import com.around.tdd.vo.CategorySaveRequest;
+import com.around.tdd.vo.CategorySearchRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,8 +16,11 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -32,7 +37,7 @@ class CategoryControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private final String baseUrl = "/api/v1/category";
+    private final String baseUrl = "/api/v1/categories";
 
     @DisplayName("카테고리 저장 성공")
     @Test
@@ -84,6 +89,70 @@ class CategoryControllerTest {
 
         // categoryService.saveCategory 메서드가 한번 호출되었는지 검증
         verify(categoryService, times(1)).saveCategory(any(CategorySaveRequest.class));
+    }
+
+    @DisplayName("카테고리 단일 조회 성공")
+    @Test
+    void findOneCategorySuccess() throws Exception {
+        // given
+        Long categorySeq = 1L;
+
+        CategoryResponse categoryResponse = new CategoryResponse();
+        categoryResponse.setCategorySeq(categorySeq);
+        categoryResponse.setDisplayYn('y');
+        categoryResponse.setName("테스트 카테고리");
+        categoryResponse.setDepth(1);
+        categoryResponse.setSort(1);
+
+        when(categoryService.findCategory(categorySeq)).thenReturn(categoryResponse);
+
+        // when & then
+        mockMvc.perform(get(baseUrl + "/" + categorySeq))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(HttpStatus.OK.name()))
+                .andExpect(jsonPath("$.message").value("카테고리 단일 조회 성공"));
+
+        verify(categoryService, times(1)).findCategory(categorySeq);
+    }
+
+    @DisplayName("유효하지 않은 카테고리 번호로 카테고리 단일 조회")
+    @Test
+    void findOneCategoryByInvalidCategorySeq() throws Exception {
+        // given
+        long categorySeq = -1L;
+
+        // when & then
+        mockMvc.perform(get(baseUrl + "/" + categorySeq))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()));
+    }
+
+    @DisplayName("카테고리 목록 조회 성공")
+    @Test
+    void findCategoryListSuccess() throws Exception {
+        // given
+        CategoryResponse categoryResponse1 = new CategoryResponse();
+        categoryResponse1.setCategorySeq(1L);
+        categoryResponse1.setDisplayYn('y');
+        categoryResponse1.setName("테스트 카테고리1");
+        categoryResponse1.setDepth(1);
+        categoryResponse1.setSort(1);
+
+        CategoryResponse categoryResponse2 = new CategoryResponse();
+        categoryResponse1.setCategorySeq(2L);
+        categoryResponse1.setDisplayYn('y');
+        categoryResponse1.setName("테스트 카테고리2");
+        categoryResponse1.setDepth(1);
+        categoryResponse1.setSort(2);
+
+        CategorySearchRequest categorySearchRequest = new CategorySearchRequest();
+        when(categoryService.findCategoryList(categorySearchRequest)).thenReturn(List.of(categoryResponse1, categoryResponse2));
+
+        // when & then
+        mockMvc.perform(get(baseUrl + "/"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(HttpStatus.OK.name()))
+                .andExpect(jsonPath("$.message").value("카테고리 목록 조회 성공"));
     }
 
     private CategorySaveRequest createCategorySaveRequest(String name, Integer sort, Integer depth) {
