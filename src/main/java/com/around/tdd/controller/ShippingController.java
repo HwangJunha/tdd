@@ -2,16 +2,20 @@ package com.around.tdd.controller;
 
 import com.around.tdd.controller.response.ApiResponse;
 import com.around.tdd.dto.request.ShippingRequest;
+import com.around.tdd.enums.ShippingStatusEnum;
 import com.around.tdd.service.ShippingService;
 import com.around.tdd.util.HttpUtil;
 import com.around.tdd.vo.Shipping;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -58,6 +62,21 @@ public class ShippingController {
 
         ApiResponse<Shipping> response = new ApiResponse<>(responseData, "배송 상태 변경 성공", HttpStatus.OK);
         return new ResponseEntity<>(response, headers, HttpStatus.OK);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<String>> handleEnumConversionError(HttpMessageNotReadableException ex) {
+        Throwable cause = ex.getCause();
+        if (cause instanceof InvalidFormatException && ((InvalidFormatException) cause).getTargetType().isEnum()) {
+            String message = "유효하지 않은 배송 상태 값입니다. 가능한 값: "
+                    + Arrays.toString(ShippingStatusEnum.values());
+
+            ApiResponse<String> response = new ApiResponse<>(null, message, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(response, HttpUtil.createJsonHeaders(), HttpStatus.BAD_REQUEST);
+        }
+
+        ApiResponse<String> response = new ApiResponse<>(null, "요청 처리 중 오류가 발생했습니다.", HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(response, HttpUtil.createJsonHeaders(), HttpStatus.BAD_REQUEST);
     }
 
     /**

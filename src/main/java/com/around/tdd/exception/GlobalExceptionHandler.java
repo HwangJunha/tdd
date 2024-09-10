@@ -71,4 +71,18 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    // InvalidShippingStatusException 예외 처리 (커스텀 예외 처리)
+    @ExceptionHandler(InvalidShippingStatusException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidShippingStatusException(InvalidShippingStatusException ex, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                ex.getMessage(),
+                LocalDateTime.now(),
+                request.getDescription(false),
+                Map.of("error", ex.getMessage())
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
 }

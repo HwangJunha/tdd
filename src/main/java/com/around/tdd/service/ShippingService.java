@@ -32,17 +32,27 @@ public class ShippingService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("주문정보를 찾을 수 없습니다."));
 
-        // Shipping 엔티티 생성
-        Shipping shipping = saveRequest.toEntity(order);
+        // 배송 생성 시 기본 상태는 '배송시작'
+        ShippingStatusEnum initialStatus = ShippingStatusEnum.SHIPPING_STARTED;
 
-        // 배송 저장
+        // Shipping 객체 생성 및 저장
+        Shipping shipping = Shipping.builder()
+                .order(order)
+                .shippingDt(LocalDateTime.now())
+                .address(saveRequest.getAddress())
+                .detailAddress(saveRequest.getDetailAddress())
+                .post(saveRequest.getPost())
+                .phone(saveRequest.getPhone())
+                .status(initialStatus)
+                .build();
+
         Shipping savedShipping = shippingRepository.save(shipping);
 
-        // 배송 로그 생성 및 저장
+        // 배송 로그 기록
         ShippingLog log = ShippingLog.builder()
                 .shipping(savedShipping)
                 .shippingLogDt(LocalDateTime.now())
-                .status(savedShipping.getStatus())
+                .status(initialStatus)
                 .build();
 
         shippingLogRepository.save(log);
