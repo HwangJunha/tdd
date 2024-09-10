@@ -1,6 +1,7 @@
 package com.around.tdd.service;
 
 
+import com.around.tdd.exception.BoardSaveException;
 import com.around.tdd.repository.BoardContentRepository;
 import com.around.tdd.repository.BoardImageRepository;
 import com.around.tdd.repository.BoardRepository;
@@ -13,17 +14,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -66,18 +64,14 @@ public class BoardServiceTest {
         BoardDTO boardDTO = BoardDTO.builder()
                 .title("Test Title")
                 .memberId("yejin1224")
+                .content("Test Content")
                 .build();
 
-        MultipartFile mockImage1 = new MockMultipartFile(
-                "boardImages",
-                "image1.jpg",
-                "image/jpeg",
-                "Test Image 1 Content".getBytes());
+        List<MultipartFile> mockFiles = createMockImages();
 
-        List<MultipartFile> boardImages = List.of(mockImage1);
 
         // BoardService의 savePost 메서드 호출
-        Board savedBoard = boardService.savePost(boardDTO, boardImages);
+        Board savedBoard = boardService.savePost(boardDTO, mockFiles);
 
         // 결과 검증
         assert savedBoard != null;
@@ -155,7 +149,6 @@ public class BoardServiceTest {
         MultipartFile mockFile1 = mock(MultipartFile.class);
         MultipartFile mockFile2 = mock(MultipartFile.class);
 
-
         when(fileStorageService.store(mockFile1)).thenReturn("image1.jpg");
         when(fileStorageService.store(mockFile2)).thenReturn("image2.jpg");
 
@@ -208,5 +201,62 @@ public class BoardServiceTest {
         Assertions.assertNotNull(foundBoard);
         Assertions.assertEquals(board.getBoardSeq(), foundBoard.getBoardSeq());
         Assertions.assertEquals(board.getTitle(), foundBoard.getTitle());
+    }
+
+    @Test
+    public void testValidationBoardRequestImoji() {
+        BoardDTO boardDTO = BoardDTO.builder()
+                .title("Test Title")
+                .content("Valid content with emojis 😊😂👍")
+                .build();
+
+        List<MultipartFile> mockFiles = createMockImages();
+        boardService.savePost(boardDTO, mockFiles);
+
+        verify(boardRepository, times(1)).save(any(Board.class));
+    }
+
+    @Test
+    public void testValidationBoardRequestTitleTooLong() {
+        // 1001자 제목
+        String longTitle = "t".repeat(1001);
+        BoardDTO boardDTO = BoardDTO.builder()
+                .title(longTitle)
+                .content("Valid Content")
+                .build();
+
+        List<MultipartFile> mockFiles = createMockImages();
+        assertThrows(BoardSaveException.class, () -> boardService.savePost(boardDTO, mockFiles));
+    }
+
+    @Test
+    public void testValidationBoardRequestContentTooLong() {
+        // 160,001자 내용
+        String longContent = "a".repeat(160001);
+        BoardDTO boardDTO = BoardDTO.builder()
+                .title("Valid Title")
+                .content(longContent)
+                .build();
+
+        List<MultipartFile> mockFiles = createMockImages();
+        assertThrows(BoardSaveException.class, () -> boardService.savePost(boardDTO, mockFiles));
+    }
+
+    @Test
+    public void testValidationBoardRequestContentBlank() {
+        BoardDTO boardDTO = BoardDTO.builder()
+                .title("Valid Title")
+                .content("")
+                .build();
+
+        List<MultipartFile> mockFiles = createMockImages();
+        assertThrows(BoardSaveException.class, () -> boardService.savePost(boardDTO, mockFiles));
+    }
+
+    public List<MultipartFile> createMockImages() {
+        MultipartFile mockFile1 = mock(MultipartFile.class);
+        MultipartFile mockFile2 = mock(MultipartFile.class);
+
+        return List.of(new MultipartFile[]{mockFile1, mockFile2});
     }
 }
