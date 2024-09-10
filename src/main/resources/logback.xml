@@ -24,7 +24,7 @@
     <springProfile name="default">
         <logger name="org.hibernate.orm.jdbc.extract" level="TRACE"/>
         <logger name="org.hibernate.orm.jdbc.bind" level="TRACE"/>
-        <root level="DEBUG">
+        <root level="INFO">
             <appender-ref ref="CONSOLE" />
             <appender-ref ref="FILE"/>
         </root>

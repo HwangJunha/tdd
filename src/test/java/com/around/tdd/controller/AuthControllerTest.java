@@ -7,7 +7,7 @@ import com.around.tdd.service.MemberService;
 import com.around.tdd.vo.MailDto;
 import com.around.tdd.vo.Member;
 import com.around.tdd.vo.MemberInfo;
-import com.around.tdd.vo.MemberRequest;
+import com.around.tdd.vo.request.AuthRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -56,11 +56,11 @@ class AuthControllerTest {
     @DisplayName("인증번호 저장 및 메일 발송 성공 테스트")
     void authNumberSaveAndEmailSendTest() throws Exception {
         // given
-        MemberRequest memberRequest = new MemberRequest();
-        memberRequest.setMemberSeq(1L);
-        Member member = new Member();
-        member.setMemberSeq(1L);
-        String content = objectMapper.writeValueAsString(memberRequest);
+        AuthRequest authRequest = new AuthRequest();
+        authRequest.setMemberSeq(1L);
+        Member member = Member.builder().build();
+
+        String content = objectMapper.writeValueAsString(authRequest);
 
         MemberInfo memberInfo = new MemberInfo();
         memberInfo.setEmail("tarot1415@gmail.com");
@@ -83,9 +83,9 @@ class AuthControllerTest {
     @DisplayName("사용자 정보가 없을 때 204 응답")
     void authNumberMemberNotFound() throws Exception {
         // Given
-        MemberRequest memberRequest = new MemberRequest();
-        memberRequest.setMemberSeq(1L);
-        String content = objectMapper.writeValueAsString(memberRequest);
+        AuthRequest authRequest = new AuthRequest();
+        authRequest.setMemberSeq(1L);
+        String content = objectMapper.writeValueAsString(authRequest);
         Mockito.when(memberService.memberFindById(99999L)).thenReturn(Optional.empty());
 
         // When & Then
@@ -106,43 +106,43 @@ class AuthControllerTest {
     @DisplayName("인증번호가 일치했을 토큰값 반환 테스트")
     void authCheckSuccessTokenSaveTest() throws Exception {
         //given
-        MemberRequest memberRequest = new MemberRequest();
-        memberRequest.setMemberSeq(1L);
-        memberRequest.setAuthNumber("123456");
-        String content = objectMapper.writeValueAsString(memberRequest);
-        String redisKey = "auth-member:"+memberRequest.getMemberSeq();
+        AuthRequest authRequest = new AuthRequest();
+        authRequest.setMemberSeq(1L);
+        authRequest.setAuthNumber("123456");
+        String content = objectMapper.writeValueAsString(authRequest);
+        String redisKey = "auth-member:"+ authRequest.getMemberSeq();
         String token = "1b4f0e9851971998e732078544c96b36c3d01cedf7caa332359d6f1d83567014";
 
 
-        when(authService.getToken(memberRequest.getMemberSeq().intValue())).thenReturn(token);
-        when(authService.matchAuth(redisKey, memberRequest.getAuthNumber())).thenReturn(true);
+        when(authService.getToken(authRequest.getMemberSeq().intValue())).thenReturn(token);
+        when(authService.matchAuth(redisKey, authRequest.getAuthNumber())).thenReturn(true);
         mockMvc.perform(MockMvcRequestBuilders.post(baseUrl+"/auth-check")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content)
                 )
                 .andExpect(status().isCreated())
                 .andExpect(content().string("1b4f0e9851971998e732078544c96b36c3d01cedf7caa332359d6f1d83567014"));
-        verify(authService).saveAuth(eq("auth-token:"+memberRequest.getMemberSeq()), eq(token));
+        verify(authService).saveAuth(eq("auth-token:"+ authRequest.getMemberSeq()), eq(token));
     }
 
     @Test
     @DisplayName("인증번호가 일치하지 않았을때 테스트")
     void authCheckFailTokenTest() throws Exception {
         //given
-        MemberRequest memberRequest = new MemberRequest();
-        memberRequest.setMemberSeq(1L);
-        memberRequest.setAuthNumber("123456");
-        String content = objectMapper.writeValueAsString(memberRequest);
-        String redisKey = "auth-member:"+memberRequest.getMemberSeq();
+        AuthRequest authRequest = new AuthRequest();
+        authRequest.setMemberSeq(1L);
+        authRequest.setAuthNumber("123456");
+        String content = objectMapper.writeValueAsString(authRequest);
+        String redisKey = "auth-member:"+ authRequest.getMemberSeq();
 
-        when(authService.matchAuth(redisKey, memberRequest.getAuthNumber())).thenReturn(false);
+        when(authService.matchAuth(redisKey, authRequest.getAuthNumber())).thenReturn(false);
         mockMvc.perform(MockMvcRequestBuilders.post(baseUrl+"/auth-check")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content)
                 )
                 .andExpect(status().isNoContent())
                 .andExpect(content().string("false"));
-        verify(authService, never()).saveAuth(redisKey, memberRequest.getAuthNumber());
+        verify(authService, never()).saveAuth(redisKey, authRequest.getAuthNumber());
     }
 
     @Test

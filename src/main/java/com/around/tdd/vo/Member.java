@@ -2,18 +2,20 @@ package com.around.tdd.vo;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
+import java.util.List;
 import java.util.Objects;
 
 @Entity
-@Setter
+@Table(name = "member")
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ToString
 public class Member {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long memberSeq;
     @NotNull
     private String id;
@@ -22,9 +24,19 @@ public class Member {
     @NotNull
     private Integer state;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "memberSeq", referencedColumnName = "memberSeq")
+    @Builder
+    public Member(String id, String password, Integer state) {
+        this.id = id;
+        this.password = password;
+        this.state = state;
+    }
+
+    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private MemberInfo memberInfo;
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<MemberDeliveryInfo> memberDeliveryInfo;
+
 
     @Override
     public boolean equals(Object o) {
@@ -37,5 +49,13 @@ public class Member {
     @Override
     public int hashCode() {
         return Objects.hash(memberSeq, id, password);
+    }
+
+    public void setMemberInfo(MemberInfo memberInfo) {
+        this.memberInfo = memberInfo;
+    }
+
+    public void setMemberDeliveryInfo(List<MemberDeliveryInfo> memberDeliveryInfo) {
+        this.memberDeliveryInfo = memberDeliveryInfo;
     }
 }
