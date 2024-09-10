@@ -1,133 +1,165 @@
 package com.around.tdd.service;
 
-import com.around.tdd.dto.ShippingDTO;
+import com.around.tdd.dto.request.ShippingRequest;
+import com.around.tdd.repository.OrderRepository;
+import com.around.tdd.repository.ShippingLogRepository;
+import com.around.tdd.repository.ShippingRepository;
 import com.around.tdd.vo.Order;
 import com.around.tdd.vo.Shipping;
 import com.around.tdd.vo.ShippingLog;
-import com.around.tdd.vo.ShippingStatus;
-import com.around.tdd.repository.ShippingRepository;
-import com.around.tdd.repository.ShippingStatusRepository;
-import com.around.tdd.repository.ShippingLogRepository;
-import com.around.tdd.repository.OrderRepository; // OrderRepository 추가
-import org.aspectj.weaver.ast.Or;
+import com.around.tdd.enums.ShippingStatusEnum;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @ActiveProfiles("test")
-@TestPropertySource(locations = "classpath:application-test.yml")
-@SpringBootTest
-@Transactional
-public class ShippingServiceTest {
+@ExtendWith(MockitoExtension.class)
+class ShippingServiceTest {
 
-    @Autowired
+    @InjectMocks
     private ShippingService shippingService;
 
-    @Autowired
+    @Mock
     private ShippingRepository shippingRepository;
 
-    @Autowired
-    private ShippingStatusRepository shippingStatusRepository;
-
-    @Autowired
+    @Mock
     private ShippingLogRepository shippingLogRepository;
 
-    @Autowired
-    private OrderRepository orderRepository; // OrderRepository 추가
+    @Mock
+    private OrderRepository orderRepository;
 
-    @Test
-    public void testCreateShippingWithLog() {
-        Order order = new Order();
+    @Nested
+    class CreateShippingTest {
 
-        // ShippingStatus 저장
-        Order savedOrder = orderRepository.save(order);
+        Order order;
+        ShippingRequest.ShippingSaveRequest shippingSaveRequest;
 
-        ShippingStatus status = ShippingStatus.builder()
-                .description("배송중")
-                .build();
+        @BeforeEach
+        void setUp() {
+            order = Order.builder()
+                    .orderSeq(1L)
+                    .build();
 
-        // ShippingStatus 저장
-        ShippingStatus savedStatus = shippingStatusRepository.save(status);
+            shippingSaveRequest = new ShippingRequest.ShippingSaveRequest();
+            shippingSaveRequest.setAddress("강서구 화곡동 423-28");
+            shippingSaveRequest.setDetailAddress("B03호");
+            shippingSaveRequest.setPost("12345");
+            shippingSaveRequest.setPhone("010-2988-1162");
+            shippingSaveRequest.setOrderId(1L);
 
-        ShippingDTO shippingDTO = ShippingDTO.builder()
-                .address("강서구 화곡동 423-28")
-                .detailAddress("B03호")
-                .post("12345")
-                .phone("010-2988-1162")
-                .build();
+            when(orderRepository.findById(anyLong())).thenReturn(Optional.of(order));
+            when(shippingRepository.save(any(Shipping.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        }
 
-        // Shipping 생성 및 저장
-        Shipping savedShipping = shippingService.createShipping(shippingDTO, savedOrder);
+        @Test
+        @DisplayName("배송 생성 및 로그 등록 테스트")
+        void createShippingWithLog() {
+            Shipping createdShipping = shippingService.createShipping(shippingSaveRequest);
 
-        // 빌더 패턴을 사용해 ShippingLog 객체 생성
-        ShippingLog log = ShippingLog.builder()
-                .shipping(savedShipping)
-                .shippingLogDt(LocalDateTime.now())
-                .shippingStatus(savedStatus)
-                .build();
+            assertThat(createdShipping).isNotNull();
+            assertThat(createdShipping.getAddress()).isEqualTo("강서구 화곡동 423-28");
+            assertThat(createdShipping.getStatus()).isEqualTo(ShippingStatusEnum.SHIPPING_IN_PROGRESS);
 
-        savedShipping.getShippingLogs().add(log);
-        shippingLogRepository.save(log);
-
-        assertThat(savedShipping.getShippingSeq()).isNotNull();
-        assertThat(savedShipping.getOrder()).isEqualTo(savedOrder);
-        assertThat(savedShipping.getAddress()).isEqualTo("강서구 화곡동 423-28");
-
-        // 저장된 ShippingLog 확인
-        assertThat(savedShipping.getShippingLogs()).isNotEmpty();
-        assertThat(savedShipping.getShippingLogs().get(0).getShippingStatus()).isEqualTo(savedStatus);
+            verify(shippingRepository, times(1)).save(any(Shipping.class));
+            verify(shippingLogRepository, times(1)).save(any(ShippingLog.class));
+        }
     }
 
-    @Test
-    public void testModifyShipping() {
-        Order order = new Order();
-        Order savedOrder = orderRepository.save(order);  // Order 저장
+    @Nested
+    class ChangeShippingStatusTest {
 
-        ShippingStatus initialStatus = ShippingStatus.builder()
-                .description("배송중")
-                .build();
-        ShippingStatus savedInitialStatus = shippingStatusRepository.save(initialStatus);  // 초기 ShippingStatus 저장
+        Order order;
+        Shipping savedShipping;
+        ShippingStatusEnum initialStatus;
+        ShippingStatusEnum updatedStatus;
 
-        ShippingDTO shippingDTO = ShippingDTO.builder()
-                .address("강서구 화곡동 423-28")
-                .detailAddress("B03호")
-                .post("12345")
-                .phone("010-2988-1162")
-                .build();
+        @BeforeEach
+        void setUp() {
+            order = Order.builder()
+                    .orderSeq(1L)
+                    .build();
 
-        Shipping savedShipping = shippingService.createShipping(shippingDTO, savedOrder);  // Shipping 생성 및 저장
+            initialStatus = ShippingStatusEnum.SHIPPING_IN_PROGRESS;
+            updatedStatus = ShippingStatusEnum.SHIPPING_COMPLETED;
 
-        ShippingStatus updatedStatus = ShippingStatus.builder()
-                .description("배송완료")
-                .build();
-        ShippingStatus savedUpdatedStatus = shippingStatusRepository.save(updatedStatus);  // 수정된 ShippingStatus 저장
+            savedShipping = Shipping.builder()
+                    .order(order)
+                    .shippingDt(LocalDateTime.now())
+                    .address("강서구 화곡동 423-28")
+                    .detailAddress("B03호")
+                    .post("12345")
+                    .phone("010-2988-1162")
+                    .status(initialStatus)
+                    .build();
 
-        ShippingDTO updatedShippingDTO = ShippingDTO.builder()
-                .address("서울시 강서구 등촌동")
-                .detailAddress("101호")
-                .post("67890")
-                .phone("010-1234-5678")
-                .build();
+            when(shippingRepository.findById(anyLong())).thenReturn(Optional.of(savedShipping));
+            when(shippingRepository.save(any(Shipping.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        }
 
-        Shipping modifiedShipping = shippingService.modifyShipping(savedShipping.getShippingSeq(), updatedShippingDTO, savedUpdatedStatus.getShippingStatusSeq());
+        @Test
+        @DisplayName("배송 상태 변경 및 로그 등록 테스트")
+        void changeShippingStatusWithLog() {
+            Shipping updatedShipping = shippingService.changeShippingStatus(savedShipping.getShippingSeq(), updatedStatus);
 
-        assertThat(modifiedShipping.getShippingSeq()).isEqualTo(savedShipping.getShippingSeq());
-        assertThat(modifiedShipping.getShippingStatus().getDescription()).isEqualTo("배송완료");
-        assertThat(modifiedShipping.getAddress()).isEqualTo("서울시 강서구 등촌동");
-        assertThat(modifiedShipping.getDetailAddress()).isEqualTo("101호");
-        assertThat(modifiedShipping.getPost()).isEqualTo("67890");
-        assertThat(modifiedShipping.getPhone()).isEqualTo("010-1234-5678");
+            assertThat(updatedShipping.getStatus()).isEqualTo(ShippingStatusEnum.SHIPPING_COMPLETED);
+            assertThat(updatedShipping.getAddress()).isEqualTo("강서구 화곡동 423-28");
 
-        // 수정 후 로그가 남겨졌는지 확인
-        assertThat(modifiedShipping.getShippingLogs()).isNotEmpty();
-        assertThat(modifiedShipping.getShippingLogs().get(modifiedShipping.getShippingLogs().size() - 1).getShippingStatus()).isEqualTo(savedUpdatedStatus);
+            verify(shippingRepository, times(1)).save(updatedShipping);
+            verify(shippingLogRepository, times(1)).save(any(ShippingLog.class));
+        }
     }
 
+    @Nested
+    class GetShippingTest {
+
+        Order order;
+        Shipping savedShipping;
+
+        @BeforeEach
+        void setUp() {
+            order = Order.builder()
+                    .orderSeq(1L)
+                    .build();
+
+            savedShipping = Shipping.builder()
+                    .order(order)
+                    .shippingDt(LocalDateTime.now())
+                    .address("강서구 화곡동 423-28")
+                    .detailAddress("B03호")
+                    .post("12345")
+                    .phone("010-2988-1162")
+                    .status(ShippingStatusEnum.SHIPPING_IN_PROGRESS)
+                    .build();
+
+            when(shippingRepository.findById(anyLong())).thenReturn(Optional.of(savedShipping));
+        }
+
+        @Test
+        @DisplayName("배송 조회 테스트")
+        void getShippingById() {
+            Long shippingId = 1L;
+
+            Shipping foundShipping = shippingService.getShippingById(shippingId);
+
+            assertThat(foundShipping).isNotNull();
+            assertThat(foundShipping.getAddress()).isEqualTo("강서구 화곡동 423-28");
+            assertThat(foundShipping.getDetailAddress()).isEqualTo("B03호");
+            assertThat(foundShipping.getStatus()).isEqualTo(ShippingStatusEnum.SHIPPING_IN_PROGRESS);
+
+            verify(shippingRepository, times(1)).findById(shippingId);
+        }
+    }
 }

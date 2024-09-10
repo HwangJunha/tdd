@@ -1,5 +1,6 @@
 package com.around.tdd.vo;
 
+import com.around.tdd.enums.ShippingStatusEnum;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -31,9 +32,9 @@ public class Shipping {
     @Column(name = "address")
     private String address;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "shipping_status_seq", nullable = false)
-    private ShippingStatus shippingStatus;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private ShippingStatusEnum status;
 
     @Column(name = "detail_address")
     private String detailAddress;
