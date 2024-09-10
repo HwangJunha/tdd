@@ -3,8 +3,10 @@ package com.around.tdd.vo;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
+@EqualsAndHashCode
 @Getter
 @Setter
 @Builder
@@ -33,12 +35,13 @@ public class Category {
     @JoinColumn(name = "parent_category_seq")
     private Category parentCategory;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "parentCategory", cascade = CascadeType.ALL)
-    private List<Category> childCategoryList;
+    @Builder.Default
+    @OneToMany(mappedBy = "parentCategory", cascade = CascadeType.ALL)
+    private List<Category> childCategoryList = new ArrayList<>();
 
     // 부모 카테고리 연관관계 설정
     public void linkParentCategory(Category parentCategory) {
-        parentCategory.setParentCategory(parentCategory);
+        this.setParentCategory(parentCategory);
         parentCategory.childCategoryList.add(this);
     }
 }
