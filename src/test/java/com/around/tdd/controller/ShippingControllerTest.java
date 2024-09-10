@@ -45,7 +45,6 @@ class ShippingControllerTest {
     @Test
     @DisplayName("배송 생성 테스트")
     void createShipping() throws Exception {
-        // Given
         ShippingRequest.ShippingSaveRequest saveRequest = new ShippingRequest.ShippingSaveRequest();
         saveRequest.setAddress("강서구 화곡동 423-28");
         saveRequest.setDetailAddress("B03호");
@@ -80,7 +79,7 @@ class ShippingControllerTest {
         // When & Then
         mockMvc.perform(put("/api/v1/shipping/1/status")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"newStatus\":\"SHIPPING_COMPLETED\"}")
+                        .content("{\"newStatus\":\"배송완료\"}")
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(ShippingStatusEnum.SHIPPING_COMPLETED.toString()));
