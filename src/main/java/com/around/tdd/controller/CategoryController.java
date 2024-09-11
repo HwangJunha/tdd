@@ -28,6 +28,11 @@ public class CategoryController {
 
     private final CategoryService categoryService;
 
+    /**
+     * 카테고리 저장
+     * @param saveRequest
+     * @return
+     */
     @PostMapping("/save")
     public ResponseEntity<ApiResponse<Long>> saveCategory(@RequestBody @Valid CategorySaveRequest saveRequest) {
         
@@ -44,6 +49,11 @@ public class CategoryController {
         return new ResponseEntity<>(response, headers, HttpStatus.CREATED);
     }
 
+    /**
+     * 카테고리 전체 조회
+     * @param searchRequest
+     * @return
+     */
     @GetMapping({"","/"})
     public ResponseEntity<ApiResponse<List<CategoryResponse>>> findCategoryList(CategorySearchRequest searchRequest) {
         HttpHeaders headers = HttpUtil.createJsonHeaders();
@@ -57,13 +67,15 @@ public class CategoryController {
         return new ResponseEntity<>(response, headers, HttpStatus.OK);
     }
 
+    /**
+     * 카테고리 단일 조회
+     * @param categorySeq
+     * @return
+     */
     @GetMapping("/{categorySeq}")
     public ResponseEntity<ApiResponse<CategoryResponse>> findCategory(@PathVariable Long categorySeq) {
         HttpHeaders headers = HttpUtil.createJsonHeaders();
-
-        if (categorySeq <= 0) {
-            throw new IllegalArgumentException("카테고리 번호는 양수여야 함");
-        }
+        validateCategorySeq(categorySeq);
 
         CategoryResponse category = categoryService.findCategory(categorySeq);
 
@@ -74,7 +86,52 @@ public class CategoryController {
         return new ResponseEntity<>(response, headers, HttpStatus.OK);
     }
 
-    // 중복 카테고리 예외처리
+    /**
+     * 카테고리 단일 제거
+     * @param categorySeq
+     * @return
+     */
+    @DeleteMapping("/{categorySeq}")
+    public ResponseEntity<ApiResponse<Void>> deleteCategory(@PathVariable Long categorySeq) {
+        HttpHeaders headers = HttpUtil.createJsonHeaders();
+        validateCategorySeq(categorySeq);
+
+        categoryService.deleteCategory(categorySeq);
+
+        ApiResponse<Void> response = new ApiResponse<>(null, "카테고리 단일 제거 성공", HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(response, headers, HttpStatus.NO_CONTENT);
+    }
+
+    /**
+     * 카테고리 전체 제거
+     * @return
+     */
+    @DeleteMapping({"/", ""})
+    public ResponseEntity<ApiResponse<Void>> deleteAllCategory() {
+        HttpHeaders headers = HttpUtil.createJsonHeaders();
+
+        categoryService.deleteAllCategory();
+
+        ApiResponse<Void> response = new ApiResponse<>(null, "카테고리 전체 제거 성공", HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(response, headers, HttpStatus.NO_CONTENT);
+    }
+
+    /**
+     * 카테고리 번호 유효성 체크
+     * @param categorySeq
+     */
+    private void validateCategorySeq(Long categorySeq) {
+        if (categorySeq <= 0) {
+            throw new IllegalArgumentException("카테고리 번호는 양수여야 함");
+        }
+    }
+
+    /**
+     * 중복 카테고리 예외처리
+     * @param ex
+     * @param request
+     * @return
+     */
     @ExceptionHandler(DuplicateCategoryException.class)
     public ResponseEntity<ErrorResponse> handleDuplicateCategoryException(DuplicateCategoryException ex, WebRequest request) {
         ErrorResponse errorResponse = new ErrorResponse(

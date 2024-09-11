@@ -6,6 +6,7 @@ import com.around.tdd.vo.Category;
 import com.around.tdd.vo.CategoryResponse;
 import com.around.tdd.vo.CategorySaveRequest;
 import com.around.tdd.vo.CategorySearchRequest;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,7 +40,7 @@ public class CategoryService {
         // 부모 카테고리 존재 시 연관관계 설정
         if (categorySaveRequest.getParentCategorySeq() != null && categorySaveRequest.getParentCategorySeq() > 0) {
             Optional<Category> parentCategory = categoryRepository.findById(categorySaveRequest.getParentCategorySeq());
-            parentCategory.ifPresent(category::linkParentCategory);
+            parentCategory.ifPresent(value -> value.addChildCategory(category));
         }
 
         // 카테고리 저장
@@ -73,6 +74,24 @@ public class CategoryService {
         Category category = categoryRepository.findById(categorySeq)
                                 .orElseThrow(() -> new RuntimeException("카테고리가 존재하지 않습니다."));
         return convertToDto(category);
+    }
+
+    /**
+     * 카테고리 단일 제거
+     * @param categorySeq
+     */
+    public void deleteCategory(Long categorySeq) {
+        if (!categoryRepository.existsById(categorySeq)) {
+            throw new EntityNotFoundException("카테고리를 찾을 수 없습니다.");
+        }
+        categoryRepository.deleteById(categorySeq);
+    }
+
+    /**
+     * 카테고리 전체 제거
+     */
+    public void deleteAllCategory() {
+        categoryRepository.deleteAll();
     }
 
     /**

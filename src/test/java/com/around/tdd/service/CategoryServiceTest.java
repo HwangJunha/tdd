@@ -7,6 +7,7 @@ import com.around.tdd.vo.Category;
 import com.around.tdd.vo.CategoryResponse;
 import com.around.tdd.vo.CategorySaveRequest;
 import com.around.tdd.vo.CategorySearchRequest;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -135,6 +136,44 @@ class CategoryServiceTest {
         verify(categoryRepository, times(1)).findById(1L);
     }
 
+    @DisplayName("카테고리 전체 제거 성공")
+    @Test
+    void deleteAllCategory() {
+        // given
+        doNothing().when(categoryRepository).deleteAll();
+
+        // when & then
+        categoryService.deleteAllCategory();
+
+        assertThat(categoryRepository.findAll()).isEmpty();
+        verify(categoryRepository, times(1)).deleteAll();
+    }
+
+    @DisplayName("카테고리 단일 삭제 성공")
+    @Test
+    void deleteOneCategorySuccess() {
+        // given
+        Long categorySeq = 1L;
+        when(categoryRepository.existsById(categorySeq)).thenReturn(true);
+
+        // when
+        categoryService.deleteCategory(categorySeq);
+
+        // then
+        verify(categoryRepository, times(1)).deleteById(categorySeq);
+    }
+
+    @DisplayName("존재하지 않는 카테고리 삭제 시도")
+    @Test
+    void deleteNotExistCategory() {
+        // given
+        Long notExistCategorySeq = 999L;
+        when(categoryRepository.existsById(notExistCategorySeq)).thenReturn(false);
+
+        // when & then
+        assertThrows(EntityNotFoundException.class, () -> categoryService.deleteCategory(notExistCategorySeq));
+    }
+    
     // 카테고리 엔티티 생성
     private Category createCategoryEntity(Long categorySeq, String name, Integer sort, Integer depth, Character displayYn) {
         return Category.builder()

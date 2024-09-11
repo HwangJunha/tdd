@@ -6,6 +6,7 @@ import com.around.tdd.vo.CategoryResponse;
 import com.around.tdd.vo.CategorySaveRequest;
 import com.around.tdd.vo.CategorySearchRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,8 +21,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ActiveProfiles("test")
@@ -154,6 +154,44 @@ class CategoryControllerTest {
                 .andExpect(jsonPath("$.status").value(HttpStatus.OK.name()))
                 .andExpect(jsonPath("$.message").value("카테고리 목록 조회 성공"));
     }
+    
+    @DisplayName("카테고리 단일 삭제 성공")
+    @Test
+    void deleteCategorySuccess() throws Exception {
+        // given
+        Long categorySeq = 1L;
+        doNothing().when(categoryService).deleteCategory(categorySeq);
+
+        // when & then
+        mockMvc.perform(delete(baseUrl + "/" + categorySeq))
+                .andExpect(status().isNoContent())
+                .andExpect(jsonPath("$.status").value(HttpStatus.NO_CONTENT.name()))
+                .andExpect(jsonPath("$.message").value("카테고리 단일 제거 성공"));
+    }
+
+    @DisplayName("존재하지 않는 카테고리 삭제 시도")
+    @Test
+    void deleteNotExistCategoryFail() throws Exception {
+        // given
+        Long notExistCategorySeq = 999L;
+        doThrow(new EntityNotFoundException("카테고리를 찾을 수 없습니다.")).when(categoryService).deleteCategory(notExistCategorySeq);
+
+        // when & then
+        mockMvc.perform(delete(baseUrl + "/" + notExistCategorySeq))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.value()))
+                .andExpect(jsonPath("$.message").value("카테고리를 찾을 수 없습니다."));
+    }
+
+    @DisplayName("카테고리 전체 삭제 성공")
+    @Test
+    void deleteAllCategorySuccess() throws Exception {
+        // when & then
+        mockMvc.perform(delete(baseUrl + "/"))
+                .andExpect(status().isNoContent())
+                .andExpect(jsonPath("$.status").value(HttpStatus.NO_CONTENT.name()))
+                .andExpect(jsonPath("$.message").value("카테고리 전체 제거 성공"));
+    }
 
     private CategorySaveRequest createCategorySaveRequest(String name, Integer sort, Integer depth) {
         CategorySaveRequest categoryRequest = new CategorySaveRequest();
@@ -162,5 +200,4 @@ class CategoryControllerTest {
         categoryRequest.setDepth(depth);
         return categoryRequest;
     }
-
 }

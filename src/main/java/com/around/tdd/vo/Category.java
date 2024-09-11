@@ -6,7 +6,6 @@ import lombok.*;
 import java.util.ArrayList;
 import java.util.List;
 
-@EqualsAndHashCode
 @Getter
 @Setter
 @Builder
@@ -39,9 +38,15 @@ public class Category {
     @OneToMany(mappedBy = "parentCategory", cascade = CascadeType.ALL)
     private List<Category> childCategoryList = new ArrayList<>();
 
-    // 부모 카테고리 연관관계 설정
-    public void linkParentCategory(Category parentCategory) {
-        this.setParentCategory(parentCategory);
-        parentCategory.childCategoryList.add(this);
+    // 자식 카테고리 추가
+    public void addChildCategory(Category childCategory) {
+        childCategoryList.add(childCategory);
+        childCategory.setParentCategory(this);
+    }
+
+    // 자식 카테고리 제거
+    public void removeChildCategory(Category childCategory) {
+        childCategoryList.remove(childCategory);
+        childCategory.setParentCategory(null);
     }
 }
