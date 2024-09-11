@@ -29,15 +29,13 @@ public class CartController {
     }
     )
     @PostMapping("/cart-add")
-    public ResponseEntity<String> addItemToCart(@RequestBody @Valid Cart cart) {
+    public ResponseEntity<Cart> addItemToCart(@RequestBody @Valid Cart cart) {
         //cartService.saveProductCartItem(request);
         Map<String, Object> response = new HashMap<>();
-        response.put("message", "Product added to cart");
-        response.put("cartSeq", cart.getCartSeq());
-        response.put("productSeq", cart.getMemberSeq());
-        response.put("productSeq", cart.getProductSeq());
-        response.put("productNum", cart.getProductNum());
-        return ResponseEntity.ok(response.toString());
+
+        Cart saveCart = cartService.saveProductCartItem(cart);
+
+        return ResponseEntity.ok(saveCart);
     }
 
 }
