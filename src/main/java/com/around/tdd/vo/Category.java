@@ -6,6 +6,7 @@ import lombok.*;
 import java.util.ArrayList;
 import java.util.List;
 
+@EqualsAndHashCode(exclude = {"parentCategory", "childCategoryList"})
 @Getter
 @Setter
 @Builder
@@ -40,12 +41,18 @@ public class Category {
 
     // 자식 카테고리 추가
     public void addChildCategory(Category childCategory) {
+        if (childCategoryList.contains(childCategory)) {
+            throw new IllegalArgumentException("이미 존재하는 하위 카테고리입니다.");
+        }
         childCategoryList.add(childCategory);
         childCategory.setParentCategory(this);
     }
 
     // 자식 카테고리 제거
     public void removeChildCategory(Category childCategory) {
+        if (!childCategoryList.contains(childCategory)) {
+            throw new IllegalArgumentException("존재하지 않는 하위 카테고리입니다.");
+        }
         childCategoryList.remove(childCategory);
         childCategory.setParentCategory(null);
     }

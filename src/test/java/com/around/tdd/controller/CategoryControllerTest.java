@@ -6,7 +6,6 @@ import com.around.tdd.vo.CategoryResponse;
 import com.around.tdd.vo.CategorySaveRequest;
 import com.around.tdd.vo.CategorySearchRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +17,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -174,7 +174,7 @@ class CategoryControllerTest {
     void deleteNotExistCategoryFail() throws Exception {
         // given
         Long notExistCategorySeq = 999L;
-        doThrow(new EntityNotFoundException("카테고리를 찾을 수 없습니다.")).when(categoryService).deleteCategory(notExistCategorySeq);
+        doThrow(new NoSuchElementException("카테고리를 찾을 수 없습니다.")).when(categoryService).deleteCategory(notExistCategorySeq);
 
         // when & then
         mockMvc.perform(delete(baseUrl + "/" + notExistCategorySeq))

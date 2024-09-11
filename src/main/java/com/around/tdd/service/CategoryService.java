@@ -6,13 +6,12 @@ import com.around.tdd.vo.Category;
 import com.around.tdd.vo.CategoryResponse;
 import com.around.tdd.vo.CategorySaveRequest;
 import com.around.tdd.vo.CategorySearchRequest;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.NoSuchElementException;
 
 @Transactional(readOnly = true)
 @Service
@@ -39,8 +38,9 @@ public class CategoryService {
 
         // 부모 카테고리 존재 시 연관관계 설정
         if (categorySaveRequest.getParentCategorySeq() != null && categorySaveRequest.getParentCategorySeq() > 0) {
-            Optional<Category> parentCategory = categoryRepository.findById(categorySaveRequest.getParentCategorySeq());
-            parentCategory.ifPresent(value -> value.addChildCategory(category));
+            Category parentCategory = categoryRepository.findById(categorySaveRequest.getParentCategorySeq())
+                                            .orElseThrow(() -> new NoSuchElementException("부모 카테고리"));
+            parentCategory.addChildCategory(category);
         }
 
         // 카테고리 저장
@@ -82,7 +82,7 @@ public class CategoryService {
      */
     public void deleteCategory(Long categorySeq) {
         if (!categoryRepository.existsById(categorySeq)) {
-            throw new EntityNotFoundException("카테고리를 찾을 수 없습니다.");
+            throw new NoSuchElementException("카테고리를 찾을 수 없습니다.");
         }
         categoryRepository.deleteById(categorySeq);
     }

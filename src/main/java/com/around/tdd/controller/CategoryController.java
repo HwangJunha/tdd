@@ -27,6 +27,8 @@ import java.util.Map;
 public class CategoryController {
 
     private final CategoryService categoryService;
+    
+    private final HttpHeaders headers = HttpUtil.createJsonHeaders();
 
     /**
      * 카테고리 저장
@@ -39,8 +41,6 @@ public class CategoryController {
         // TODO 관리자 권한 확인 필요
         
         Long savedCategorySeq = categoryService.saveCategory(saveRequest);
-
-        HttpHeaders headers = HttpUtil.createJsonHeaders();
 
         Map<String, Long> responseData = new HashMap<>();
         responseData.put("savedCategorySeq", savedCategorySeq);
@@ -55,9 +55,7 @@ public class CategoryController {
      * @return
      */
     @GetMapping({"","/"})
-    public ResponseEntity<ApiResponse<List<CategoryResponse>>> findCategoryList(CategorySearchRequest searchRequest) {
-        HttpHeaders headers = HttpUtil.createJsonHeaders();
-
+    public ResponseEntity<ApiResponse<List<CategoryResponse>>> findCategoryList(@Valid CategorySearchRequest searchRequest) {
         List<CategoryResponse> categoryList = categoryService.findCategoryList(searchRequest);
 
         Map<String, List<CategoryResponse>> responseData = new HashMap<>();
@@ -74,7 +72,6 @@ public class CategoryController {
      */
     @GetMapping("/{categorySeq}")
     public ResponseEntity<ApiResponse<CategoryResponse>> findCategory(@PathVariable Long categorySeq) {
-        HttpHeaders headers = HttpUtil.createJsonHeaders();
         validateCategorySeq(categorySeq);
 
         CategoryResponse category = categoryService.findCategory(categorySeq);
@@ -93,7 +90,6 @@ public class CategoryController {
      */
     @DeleteMapping("/{categorySeq}")
     public ResponseEntity<ApiResponse<Void>> deleteCategory(@PathVariable Long categorySeq) {
-        HttpHeaders headers = HttpUtil.createJsonHeaders();
         validateCategorySeq(categorySeq);
 
         categoryService.deleteCategory(categorySeq);
@@ -108,8 +104,6 @@ public class CategoryController {
      */
     @DeleteMapping({"/", ""})
     public ResponseEntity<ApiResponse<Void>> deleteAllCategory() {
-        HttpHeaders headers = HttpUtil.createJsonHeaders();
-
         categoryService.deleteAllCategory();
 
         ApiResponse<Void> response = new ApiResponse<>(null, "카테고리 전체 제거 성공", HttpStatus.NO_CONTENT);
@@ -122,7 +116,7 @@ public class CategoryController {
      */
     private void validateCategorySeq(Long categorySeq) {
         if (categorySeq <= 0) {
-            throw new IllegalArgumentException("카테고리 번호는 양수여야 함");
+            throw new IllegalArgumentException("잘못된 카테고리 번호");
         }
     }
 

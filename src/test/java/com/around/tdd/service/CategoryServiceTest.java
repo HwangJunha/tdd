@@ -7,7 +7,6 @@ import com.around.tdd.vo.Category;
 import com.around.tdd.vo.CategoryResponse;
 import com.around.tdd.vo.CategorySaveRequest;
 import com.around.tdd.vo.CategorySearchRequest;
-import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
@@ -171,7 +171,7 @@ class CategoryServiceTest {
         when(categoryRepository.existsById(notExistCategorySeq)).thenReturn(false);
 
         // when & then
-        assertThrows(EntityNotFoundException.class, () -> categoryService.deleteCategory(notExistCategorySeq));
+        assertThrows(NoSuchElementException.class, () -> categoryService.deleteCategory(notExistCategorySeq));
     }
     
     // 카테고리 엔티티 생성
