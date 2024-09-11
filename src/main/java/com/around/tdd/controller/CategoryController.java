@@ -115,7 +115,7 @@ public class CategoryController {
      * @param categorySeq
      */
     private void validateCategorySeq(Long categorySeq) {
-        if (categorySeq <= 0) {
+        if (categorySeq == null || categorySeq <= 0) {
             throw new IllegalArgumentException("잘못된 카테고리 번호");
         }
     }

@@ -80,6 +80,7 @@ public class CategoryService {
      * 카테고리 단일 제거
      * @param categorySeq
      */
+    @Transactional
     public void deleteCategory(Long categorySeq) {
         if (!categoryRepository.existsById(categorySeq)) {
             throw new NoSuchElementException("카테고리를 찾을 수 없습니다.");
@@ -90,6 +91,7 @@ public class CategoryService {
     /**
      * 카테고리 전체 제거
      */
+    @Transactional
     public void deleteAllCategory() {
         categoryRepository.deleteAll();
     }
