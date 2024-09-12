@@ -88,4 +88,6 @@ public class AuthController {
         boolean authCheck = authService.matchAuth("auth-token:"+memberSeq, authToken);
         return new ResponseEntity<>(String.valueOf(authCheck), HttpUtil.createJsonHeaders(), authCheck ? HttpStatus.OK : HttpStatus.NO_CONTENT);
     }
+
+
 }
