@@ -54,4 +54,29 @@ class CartRepositoryTest {
         assertThat(optionalCart.get().getMemberSeq()).isEqualTo(memberSeq);
     }
 
+    @DisplayName("장바구니 저장 실패")
+    @Test
+    @Rollback(value =false)
+    void saveCartFail(){
+        //given
+        Long memberSeq = 1L;
+        Long productSeq = 1L;
+        int productNum = 100;
+
+        Cart cart = Cart.builder()
+                .memberSeq(memberSeq)
+                .productSeq(productSeq)
+                .productNum(productNum)
+                .build();
+
+        //when
+        Cart saveCart = cartRepository.save(cart);
+        Optional<Cart> optionalCart = cartRepository.findById(saveCart.getCartSeq());
+
+        //then
+        assertThat(optionalCart.isPresent()).isTrue();
+        assertThat(optionalCart.get().getProductSeq()).isEqualTo(productSeq);
+        assertThat(optionalCart.get().getProductNum()).isEqualTo(productNum);
+        assertThat(optionalCart.get().getMemberSeq()).isEqualTo(memberSeq);
+    }
 }

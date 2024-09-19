@@ -52,4 +52,27 @@ public class CartServiceTest {
         // cartRepository.save() 메서드 호출확인
         verify(cartRepository).save(any(Cart.class));
     }
+
+    @Test
+    @DisplayName("장바구니 저장 실패 테스트")
+    public void saveCartFail() {
+        // given 장바구니 데이터 설정
+        Cart cart = new Cart();
+        cart.setCartSeq(1L);
+        cart.setMemberSeq(1L);
+        cart.setProductSeq(100L);
+        cart.setProductNum(2);
+
+        // cartRepository.save() 호출 시 저장된 Cart 객체를 반환하
+        when(cartRepository.save(any(Cart.class))).thenReturn(null);
+
+        // when - CartService의 saveCart 호출
+        Cart savedCart = cartService.saveCart(cart);
+
+        // then - 결과 확인
+        assertEquals(null, savedCart);
+
+        // cartRepository.save() 메서드 호출확인
+        verify(cartRepository).save(any(Cart.class));
+    }
 }

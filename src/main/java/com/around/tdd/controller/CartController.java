@@ -8,10 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,5 +31,12 @@ public class CartController {
         Cart saveCart = cartService.saveCart(cart);
 
         return ResponseEntity.ok(saveCart);
+    }
+
+    @GetMapping("/cart-list")
+    public ResponseEntity<Map<String, Object>> getCartList(Long memberSeq) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("cartList", cartService.getCartList(memberSeq));
+        return ResponseEntity.ok(response);
     }
 }

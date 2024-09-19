@@ -21,4 +21,11 @@ public class CartService {
         }
         return cartRepository.save(cart);
     }
+
+    public Cart getCartList(Long memberSeq) {
+        if(memberSeq == null) {
+            throw new IllegalArgumentException("MemberSeq cannot be null or empty");
+        }
+        return cartRepository.findById(memberSeq).orElse(null);
+    }
 }

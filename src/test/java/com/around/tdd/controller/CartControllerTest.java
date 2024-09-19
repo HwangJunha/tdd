@@ -58,4 +58,21 @@ public class CartControllerTest {
                 .andExpect(jsonPath("$.productSeq").value(1L))
                 .andExpect(jsonPath("$.productNum").value(1));
     }
+
+    @Test
+    @DisplayName("장바구니 저장 실패 테스트 - null 또는 Empty")
+    public void saveCartProductFailTest() throws Exception {
+        // given
+        Cart emptyCart = new Cart();
+
+        // when
+        when(cartService.saveCart(any(Cart.class))).thenThrow(new IllegalArgumentException("장바구니 저장 실패"));
+
+        // then
+        mockMvc.perform(post(baseUrl + "/cart-add")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(emptyCart)))  // ObjectMapper로 JSON 변환
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("장바구니 저장 실패"));
+    }
 }
