@@ -20,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -129,17 +128,17 @@ public class AuthService {
     @Transactional
     public ResponseEntity<ApiResponse<MemberAuth>> matchMemberAuthDictionary(MemberAuth memberAuth) {
         var optionalMember = memberRepository.findById(memberAuth.getMemberAuthId().getMemberSeq());
-        if (!optionalMember.isPresent()) {
-            return new ResponseEntity<>(new com.around.tdd.controller.response.ApiResponse<>(Map.of(),"사용자 없음", HttpStatus.NO_CONTENT), HttpUtil.createJsonHeaders(), HttpStatus.NO_CONTENT);
+        if (optionalMember.isEmpty()) {
+            return HttpUtil.createApiResponse(null, "", "사용자 없음", HttpStatus.NO_CONTENT);
         }
 
         var optionalMemberAuthDictionary = memberAuthDictionaryRepository.findById(memberAuth.getMemberAuthId().getMemberAuthDictionarySeq());
-        if(!optionalMemberAuthDictionary.isPresent()){
-            return new ResponseEntity<>(new com.around.tdd.controller.response.ApiResponse<>(Map.of(),"일부 권한이 정의 되어 있지 않음", HttpStatus.NO_CONTENT),HttpUtil.createJsonHeaders(), HttpStatus.NO_CONTENT);
+        if(optionalMemberAuthDictionary.isEmpty()){
+            return HttpUtil.createApiResponse(null, "", "일부 권한이 정의 되어 있지 않음", HttpStatus.NO_CONTENT);
         }
         memberAuth.setMember(optionalMember.get());
         memberAuth.setMemberAuthDictionary(optionalMemberAuthDictionary.get());
         var savedMemberAuth = memberAuthRepository.save(memberAuth);
-        return new ResponseEntity<>(new com.around.tdd.controller.response.ApiResponse<>(Map.of("savedMemberAuth", savedMemberAuth),"입력된 권한이 모두 저장되었습니다.", HttpStatus.CREATED),HttpUtil.createJsonHeaders(), HttpStatus.CREATED);
+        return HttpUtil.createApiResponse(savedMemberAuth, "savedMemberAuth", "입력된 권한이 모두 저장되었습니다.", HttpStatus.CREATED);
     }
 }
