@@ -5,6 +5,7 @@ import com.around.tdd.vo.Cart;
 import com.around.tdd.vo.CartItemRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -13,8 +14,11 @@ public class CartService {
 
     private final CartRepository cartRepository;
 
-    public Cart saveProductCartItem(Cart cart) {
-
+    @Transactional
+    public Cart saveCart(Cart cart) {
+        if (cart == null) {
+            throw new IllegalArgumentException("Cart cannot be null or empty");
+        }
         return cartRepository.save(cart);
     }
 }

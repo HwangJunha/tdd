@@ -29,7 +29,7 @@ public class CartServiceTest {
 
     @Test
     @DisplayName("장바구니 저장 성공 테스트")
-    public void saveProductCartItemSuccess() {
+    public void saveCartSuccess() {
         // given 장바구니 데이터 설정
         Cart cart = new Cart();
         cart.setCartSeq(1L);
@@ -41,7 +41,7 @@ public class CartServiceTest {
         when(cartRepository.save(any(Cart.class))).thenReturn(cart);
 
         // when - CartService의 saveCart 호출
-        Cart savedCart = cartService.saveProductCartItem(cart);
+        Cart savedCart = cartService.saveCart(cart);
 
         // then - 결과 확인
         assertEquals(1L, savedCart.getCartSeq());

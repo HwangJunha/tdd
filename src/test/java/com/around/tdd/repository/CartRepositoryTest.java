@@ -27,10 +27,11 @@ class CartRepositoryTest {
         cartRepository.deleteAll();
     }
 
+
     @DisplayName("장바구니 저장 성공")
     @Test
     @Rollback(value =false)
-    void saveProductCartItemSuccess(){
+    void saveCartSuccess(){
         //given
         Long memberSeq = 1L;
         Long productSeq = 1L;

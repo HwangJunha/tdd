@@ -23,4 +23,5 @@ public class Cart {
 
     @Column(name="product_num", nullable = false)
     private Integer productNum;
+
 }

@@ -47,7 +47,7 @@ public class CartControllerTest {
         cart.setProductNum(1);
 
         // when
-        when(cartService.saveProductCartItem(any(Cart.class))).thenReturn(cart);
+        when(cartService.saveCart(any(Cart.class))).thenReturn(cart);
         // the
         mockMvc.perform(post(baseUrl + "/cart-add")
                         .contentType(MediaType.APPLICATION_JSON)
