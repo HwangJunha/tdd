@@ -2,6 +2,8 @@ package com.around.tdd.service;
 
 import com.around.tdd.property.AuthProperty;
 import com.around.tdd.repository.AuthRedisRepository;
+import com.around.tdd.repository.MemberAuthDictionaryRepository;
+import com.around.tdd.vo.MemberAuthDictionary;
 import com.around.tdd.vo.RedisAuth;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -18,6 +20,7 @@ public class AuthService {
     private final AuthRedisRepository authRedisRepository;
 
     private final AuthProperty authProperty;
+    private final MemberAuthDictionaryRepository memberAuthDictionaryRepository;
 
     /**
      * 인증관련 레디스 키 저장
@@ -79,4 +82,21 @@ public class AuthService {
         return RandomStringUtils.randomNumeric(6);
     }
 
+    /**
+     * 사용자 권한을 확인한다.
+     * @param memberAuthDictionarySeq - 사용자 권한 번호
+     * @return 사용자 권한 확인
+     */
+    public Optional<MemberAuthDictionary> getMemberAuthDictionary(Long memberAuthDictionarySeq) {
+         return memberAuthDictionaryRepository.findById(memberAuthDictionarySeq);
+    }
+
+    /**
+     * 사용자 권한 사전 테이블 값을 입력한다.
+     * @param memberAuthDictionary - 사용자 권한 entity
+     * @return 입력된 사용자 권한
+     */
+    public MemberAuthDictionary insertMemberAuthDictionary(MemberAuthDictionary memberAuthDictionary){
+        return memberAuthDictionaryRepository.save(memberAuthDictionary);
+    }
 }
