@@ -6,9 +6,11 @@ import com.around.tdd.service.MemberService;
 import com.around.tdd.util.HttpUtil;
 import com.around.tdd.vo.MailDto;
 import com.around.tdd.vo.Member;
+import com.around.tdd.vo.MemberAuth;
 import com.around.tdd.vo.MemberAuthDictionary;
 import com.around.tdd.vo.request.AuthRequest;
 import com.around.tdd.vo.request.MemberAuthDictionaryRequest;
+import com.around.tdd.vo.request.MemberAuthRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -101,9 +103,23 @@ public class AuthController {
     )
     @PostMapping("/member-auth-dictionary")
     public ResponseEntity<com.around.tdd.controller.response.ApiResponse<MemberAuthDictionary>>
-        memberAuthDictionary(@RequestBody MemberAuthDictionaryRequest memberAuthDictionaryRequest) {
+        insertMemberAuthDictionary(@RequestBody MemberAuthDictionaryRequest memberAuthDictionaryRequest) {
 
         MemberAuthDictionary memberAuthDictionary = authService.insertMemberAuthDictionary(memberAuthDictionaryRequest.fromMemberAuthDictionary());
         return new ResponseEntity<>(new com.around.tdd.controller.response.ApiResponse<>(Map.of("memberAuthDictionary", memberAuthDictionary), "신규 권한 등록 성공", HttpStatus.CREATED),HttpUtil.createJsonHeaders(), HttpStatus.CREATED);
+    }
+
+    @Operation(
+            summary = "회원 권한 매치 api"
+    )
+    @ApiResponses(value = {
+            @ApiResponse( responseCode = "201", description = "신규 권한 매치 성공"),
+    }
+    )
+    @PostMapping("/member-auth")
+    public ResponseEntity<com.around.tdd.controller.response.ApiResponse<MemberAuth>>
+    insertMemberAuth(@RequestBody MemberAuthRequest memberAuthRequest) {
+        var memberAuth = memberAuthRequest.fromMemberAuth();
+        return authService.matchMemberAuthDictionary(memberAuth);
     }
 }

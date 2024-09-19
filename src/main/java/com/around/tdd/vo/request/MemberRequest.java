@@ -1,8 +1,6 @@
 package com.around.tdd.vo.request;
 
-import com.around.tdd.vo.Member;
-import com.around.tdd.vo.MemberDeliveryInfo;
-import com.around.tdd.vo.MemberInfo;
+import com.around.tdd.vo.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.time.LocalDateTime;
@@ -66,6 +64,5 @@ public record MemberRequest(
                             .build();
                 })
                 .collect(Collectors.toList());
-
     }
 }

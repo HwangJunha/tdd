@@ -1,6 +1,7 @@
 package com.around.tdd.vo;
 
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -25,6 +26,7 @@ public class MemberAuthDictionary {
     }
 
     @OneToMany(mappedBy = "memberAuthDictionary", cascade = CascadeType.ALL)
+    @JsonBackReference
     private List<MemberAuth> memberAuthList;
 
     public void setMemberAuthList(List<MemberAuth> memberAuthList) {
