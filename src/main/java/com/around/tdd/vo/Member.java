@@ -37,6 +37,8 @@ public class Member {
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<MemberDeliveryInfo> memberDeliveryInfo;
 
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<MemberAuth> memberAuthList;
 
     @Override
     public boolean equals(Object o) {
@@ -57,5 +59,9 @@ public class Member {
 
     public void setMemberDeliveryInfo(List<MemberDeliveryInfo> memberDeliveryInfo) {
         this.memberDeliveryInfo = memberDeliveryInfo;
+    }
+
+    public void setMemberAuthList(List<MemberAuth> memberAuthList) {
+        this.memberAuthList = memberAuthList;
     }
 }

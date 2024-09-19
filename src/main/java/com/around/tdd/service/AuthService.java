@@ -1,14 +1,25 @@
 package com.around.tdd.service;
 
+import com.around.tdd.controller.response.ApiResponse;
 import com.around.tdd.property.AuthProperty;
 import com.around.tdd.repository.AuthRedisRepository;
+import com.around.tdd.repository.MemberAuthDictionaryRepository;
+import com.around.tdd.repository.MemberAuthRepository;
+import com.around.tdd.repository.MemberRepository;
+import com.around.tdd.util.HttpUtil;
+import com.around.tdd.vo.MemberAuth;
+import com.around.tdd.vo.MemberAuthDictionary;
 import com.around.tdd.vo.RedisAuth;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -16,8 +27,10 @@ import java.util.Optional;
 public class AuthService {
 
     private final AuthRedisRepository authRedisRepository;
-
     private final AuthProperty authProperty;
+    private final MemberAuthDictionaryRepository memberAuthDictionaryRepository;
+    private final MemberRepository memberRepository;
+    private final MemberAuthRepository memberAuthRepository;
 
     /**
      * 인증관련 레디스 키 저장
@@ -79,4 +92,53 @@ public class AuthService {
         return RandomStringUtils.randomNumeric(6);
     }
 
+    /**
+     * 사용자 권한을 확인한다.
+     * @param memberAuthDictionarySeq - 사용자 권한 번호
+     * @return 사용자 권한 확인
+     */
+    public Optional<MemberAuthDictionary> getMemberAuthDictionary(Long memberAuthDictionarySeq) {
+        return memberAuthDictionaryRepository.findById(memberAuthDictionarySeq);
+    }
+
+    /**
+     * 입력할 사용자 권한이 모두 있는지 확인한다
+     * @param memberDictionarySeqs - 입력할 사용자 권한이 모두 있는지 확인한다
+     * @return 권한 개수 반환
+     */
+    public Long getMemberAuthDictionarySeqs(List<Long> memberDictionarySeqs) {
+        return memberAuthDictionaryRepository.countByMemberAuthDictionarySeqIn(memberDictionarySeqs);
+    }
+
+
+    /**
+     * 사용자 권한 사전 테이블 값을 입력한다.
+     * @param memberAuthDictionary - 사용자 권한 entity
+     * @return 입력된 사용자 권한
+     */
+    public MemberAuthDictionary insertMemberAuthDictionary(MemberAuthDictionary memberAuthDictionary){
+        return memberAuthDictionaryRepository.save(memberAuthDictionary);
+    }
+
+    /**
+     * 사용자 권한 매치
+     * @param memberAuth - 입력할 권한
+     * @return 입력된 사용자 권한들
+     */
+    @Transactional
+    public ResponseEntity<ApiResponse<MemberAuth>> matchMemberAuthDictionary(MemberAuth memberAuth) {
+        var optionalMember = memberRepository.findById(memberAuth.getMemberAuthId().getMemberSeq());
+        if (optionalMember.isEmpty()) {
+            return HttpUtil.createApiResponse(null, "", "사용자 없음", HttpStatus.NO_CONTENT);
+        }
+
+        var optionalMemberAuthDictionary = memberAuthDictionaryRepository.findById(memberAuth.getMemberAuthId().getMemberAuthDictionarySeq());
+        if(optionalMemberAuthDictionary.isEmpty()){
+            return HttpUtil.createApiResponse(null, "", "일부 권한이 정의 되어 있지 않음", HttpStatus.NO_CONTENT);
+        }
+        memberAuth.setMember(optionalMember.get());
+        memberAuth.setMemberAuthDictionary(optionalMemberAuthDictionary.get());
+        var savedMemberAuth = memberAuthRepository.save(memberAuth);
+        return HttpUtil.createApiResponse(savedMemberAuth, "savedMemberAuth", "입력된 권한이 모두 저장되었습니다.", HttpStatus.CREATED);
+    }
 }

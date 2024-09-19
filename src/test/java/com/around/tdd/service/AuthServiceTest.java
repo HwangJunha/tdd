@@ -1,9 +1,15 @@
 package com.around.tdd.service;
 
+import com.around.tdd.controller.response.ApiResponse;
 import com.around.tdd.property.AuthProperty;
 import com.around.tdd.repository.AuthRedisRepository;
-import com.around.tdd.vo.RedisAuth;
+import com.around.tdd.repository.MemberAuthDictionaryRepository;
+import com.around.tdd.repository.MemberAuthRepository;
+import com.around.tdd.repository.MemberRepository;
+import com.around.tdd.vo.*;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -11,10 +17,14 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -28,6 +38,15 @@ class AuthServiceTest {
 
     @Mock
     private AuthProperty authProperty;
+
+    @Mock
+    private MemberRepository memberRepository;
+
+    @Mock
+    private MemberAuthDictionaryRepository memberAuthDictionaryRepository;
+
+    @Mock
+    private MemberAuthRepository memberAuthRepository;
 
     @DisplayName("인증 번호 저장 테스트")
     @ParameterizedTest
@@ -67,6 +86,75 @@ class AuthServiceTest {
         assertThat(authNumber).hasSize(6);
     }
 
+    @Nested
+    class matchMemberAuthDictionaryTest{
+        private Member member;
+        private MemberAuthDictionary memberAuthDictionary;
+        private MemberAuth memberAuth;
+        @BeforeEach
+        void setUp(){
+            // 테스트에 사용할 데이터 초기화
+            member = Member
+                    .builder()
+                    .build();
+            memberAuthDictionary = MemberAuthDictionary
+                    .builder()
+                    .build();
+            memberAuth = new MemberAuth();
+            memberAuth.setMemberAuthId(new MemberAuthId(1L, 1L)); // Composite Key 사용 예시
+        }
+
+        @Test
+        @DisplayName("권한 매칭 성공")
+        void testMatchMemberAuthDictionary_Success() {
+            // given
+            when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
+            when(memberAuthDictionaryRepository.findById(1L)).thenReturn(Optional.of(memberAuthDictionary));
+            when(memberAuthRepository.save(memberAuth)).thenReturn(memberAuth);
+
+            // when
+            ResponseEntity<ApiResponse<MemberAuth>> response = authService.matchMemberAuthDictionary(memberAuth);
+
+            // then
+            assertNotNull(response);
+            assertEquals(HttpStatus.CREATED, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertEquals("입력된 권한이 모두 저장되었습니다.", response.getBody().getMessage());
+            assertEquals(memberAuth, response.getBody().getData().get("savedMemberAuth"));
+        }
+
+        @Test
+        @DisplayName("사용자 없음 테스트")
+        void testMatchMemberAuthDictionary_MemberNotFound() {
+            // given
+            when(memberRepository.findById(1L)).thenReturn(Optional.empty());
+
+            // when
+            ResponseEntity<ApiResponse<MemberAuth>> response = authService.matchMemberAuthDictionary(memberAuth);
+
+            // then
+            assertNotNull(response);
+            assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+            assertEquals("사용자 없음", response.getBody().getMessage());
+        }
+
+        @Test
+        @DisplayName("권한이 정의 되어 있지 않은 테스트")
+        void testMatchMemberAuthDictionary_AuthDictionaryNotFound() {
+            // given
+            when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
+            when(memberAuthDictionaryRepository.findById(1L)).thenReturn(Optional.empty());
+
+            // when
+            ResponseEntity<ApiResponse<MemberAuth>> response = authService.matchMemberAuthDictionary(memberAuth);
+
+            // then
+            assertNotNull(response);
+            assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+            assertEquals("일부 권한이 정의 되어 있지 않음", response.getBody().getMessage());
+        }
+
+    }
 
 
 

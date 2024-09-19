@@ -6,8 +6,10 @@ import com.around.tdd.service.EmailSendService;
 import com.around.tdd.service.MemberService;
 import com.around.tdd.vo.MailDto;
 import com.around.tdd.vo.Member;
+import com.around.tdd.vo.MemberAuthDictionary;
 import com.around.tdd.vo.MemberInfo;
 import com.around.tdd.vo.request.AuthRequest;
+import com.around.tdd.vo.request.MemberAuthDictionaryRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,6 +17,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -27,8 +30,7 @@ import java.util.Optional;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ActiveProfiles("test")
 @EnableMockMvc //한글 깨짐 방지
@@ -173,5 +175,23 @@ class AuthControllerTest {
                 )
                 .andExpect(status().isNoContent())
                 .andExpect(content().string("false"));
+    }
+
+    @Test
+    @DisplayName("권한 등록 테스트")
+    void memberAuthDictionaryInsert() throws Exception {
+        //given
+        var memberAuthDictionaryRequest = new MemberAuthDictionaryRequest(0L, "신규권한");
+        var content = objectMapper.writeValueAsString(memberAuthDictionaryRequest);
+        var memberAuthDictionary = memberAuthDictionaryRequest.fromMemberAuthDictionary();
+        //when & then
+        when(authService.insertMemberAuthDictionary(any(MemberAuthDictionary.class))).thenReturn(memberAuthDictionary);
+        mockMvc.perform(MockMvcRequestBuilders.post(baseUrl+"/member-auth-dictionary")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(content)
+                )
+                .andExpect(jsonPath("$.status").value(HttpStatus.CREATED.name()))
+                .andExpect(jsonPath("$.data.memberAuthDictionary.authName").value(memberAuthDictionaryRequest.authName()));
+        verify(authService).insertMemberAuthDictionary(any(MemberAuthDictionary.class));
     }
 }

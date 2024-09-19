@@ -1,8 +1,6 @@
 package com.around.tdd.repository;
 
-import com.around.tdd.vo.Member;
-import com.around.tdd.vo.MemberDeliveryInfo;
-import com.around.tdd.vo.MemberInfo;
+import com.around.tdd.vo.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -26,6 +24,8 @@ class MemberRepositoryTest {
     @Autowired
     private MemberRepository memberRepository;
 
+    @Autowired
+    private MemberAuthDictionaryRepository memberAuthDictionaryRepository;
 
     @Nested
     class MemberFindTest{
@@ -102,6 +102,48 @@ class MemberRepositoryTest {
             List<Member> resultMember = memberRepository.findAll();
             assertThat(resultMember.get(0).getMemberDeliveryInfo().size()).isEqualTo(3);
             assertThat(resultMember.get(0)).isEqualTo(member);
+        }
+
+        @DisplayName("회원권한 추가 테스트")
+        @Test
+        void memberAuthInsertTest(){
+            var savedMember = memberRepository.save(member);
+
+            MemberAuthDictionary memberAuthDictionary1 = MemberAuthDictionary
+                    .builder()
+                    .authName("임시권한1")
+                    .build();
+
+            MemberAuthDictionary memberAuthDictionary2 = MemberAuthDictionary
+                    .builder()
+                    .authName("임시권한2")
+                    .build();
+
+            var savedMemberAuthDictionary1 = memberAuthDictionaryRepository.save(memberAuthDictionary1);
+            var savedMemberAuthDictionary2 = memberAuthDictionaryRepository.save(memberAuthDictionary2);
+
+            var memberAuth1 = new MemberAuth();
+            memberAuth1.setMemberAuthId(new MemberAuthId(member.getMemberSeq(), savedMemberAuthDictionary1.getMemberAuthDictionarySeq()));
+
+            memberAuth1.setMember(member);
+            memberAuth1.setMemberAuthDictionary(memberAuthDictionary1);
+
+            var memberAuth2 = new MemberAuth();
+            memberAuth2.setMemberAuthId(new MemberAuthId(member.getMemberSeq(), savedMemberAuthDictionary2.getMemberAuthDictionarySeq()));
+
+            memberAuth2.setMember(member);
+            memberAuth2.setMemberAuthDictionary(memberAuthDictionary2);
+
+            savedMember.setMemberAuthList(List.of(memberAuth1, memberAuth2));
+
+            var listMember = memberRepository.findAll();
+            assertThat(listMember.size()).isEqualTo(1);
+            assertThat(listMember).contains(member);
+
+            assertThat(listMember.get(0).getMemberAuthList().size()).isEqualTo(2);
+            assertThat(listMember.get(0).getMemberAuthList()).contains(memberAuth1);
+            assertThat(listMember.get(0).getMemberAuthList()).contains(memberAuth2);
+
         }
     }
 
