@@ -1,19 +1,18 @@
 package com.around.tdd.vo;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
 @Setter
 @Getter
+@Builder
+@NoArgsConstructor(access = AccessLevel.PUBLIC)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Cart {
     @Id
     @Column(name = "cart_seq", nullable = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long cartSeq;
 
     @Column(name ="member_seq", nullable = false)
