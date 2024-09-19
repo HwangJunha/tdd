@@ -156,6 +156,42 @@ class AuthServiceTest {
 
     }
 
+    @Nested
+    class CheckMemberAuthTest{
+
+        private MemberAuthId memberAuthId;
+        private MemberAuth memberAuth;
+        private Long memberSeq = 1L;
+        private Long memberAuthDictionarySeq = 1L;
+
+        @BeforeEach
+        void setUp(){
+            //given
+            memberAuthId = new MemberAuthId(memberSeq, memberAuthDictionarySeq);
+            memberAuth = new MemberAuth();
+            memberAuth.setMemberAuthId(memberAuthId);
+        }
+
+        @Test
+        @DisplayName("권한이 존재하는 테스트")
+        void testCheckMemberAuthSuccess() {
+            //when
+            when(memberAuthRepository.findById(memberAuthId)).thenReturn(Optional.of(memberAuth));
+            //then
+            Boolean result = authService.checkMemberAuth(memberSeq, memberAuthDictionarySeq);
+            assertThat(result).isTrue();
+        }
+
+        @Test
+        @DisplayName("권한이 존재하지 않은 테스트 테스트")
+        void testCheckMemberAuthFail() {
+            //when
+            when(memberAuthRepository.findById(memberAuthId)).thenReturn(Optional.empty());
+            //then
+            Boolean result = authService.checkMemberAuth(memberSeq, memberAuthDictionarySeq);
+            assertThat(result).isFalse();
+        }
+    }
 
 
 }

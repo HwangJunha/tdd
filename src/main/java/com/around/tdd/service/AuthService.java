@@ -9,9 +9,11 @@ import com.around.tdd.repository.MemberRepository;
 import com.around.tdd.util.HttpUtil;
 import com.around.tdd.vo.MemberAuth;
 import com.around.tdd.vo.MemberAuthDictionary;
+import com.around.tdd.vo.MemberAuthId;
 import com.around.tdd.vo.RedisAuth;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -141,4 +143,20 @@ public class AuthService {
         var savedMemberAuth = memberAuthRepository.save(memberAuth);
         return HttpUtil.createApiResponse(savedMemberAuth, "savedMemberAuth", "입력된 권한이 모두 저장되었습니다.", HttpStatus.CREATED);
     }
+
+    /**
+     * 사용자 권한 확인 메서드
+     * @param memberSeq - 사용자 번호
+     * @param memberAuthDictionarySeq - 권한 번호
+     * @return true: 권한 있음, false 권한 없음
+     */
+    @Cacheable(value="checkMemberAuth", key="#memberSeq + '_'+ #memberAuthDictionarySeq")
+    public Boolean checkMemberAuth(Long memberSeq, Long memberAuthDictionarySeq) {
+        var optionalMemberAuth = memberAuthRepository.findById(new MemberAuthId(memberSeq, memberAuthDictionarySeq));
+        if(optionalMemberAuth.isEmpty()){
+            return false;
+        }
+        return true;
+    }
+
 }

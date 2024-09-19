@@ -4,10 +4,7 @@ import com.around.tdd.service.AuthService;
 import com.around.tdd.service.EmailSendService;
 import com.around.tdd.service.MemberService;
 import com.around.tdd.util.HttpUtil;
-import com.around.tdd.vo.MailDto;
-import com.around.tdd.vo.Member;
-import com.around.tdd.vo.MemberAuth;
-import com.around.tdd.vo.MemberAuthDictionary;
+import com.around.tdd.vo.*;
 import com.around.tdd.vo.request.AuthRequest;
 import com.around.tdd.vo.request.MemberAuthDictionaryRequest;
 import com.around.tdd.vo.request.MemberAuthRequest;
@@ -122,4 +119,23 @@ public class AuthController {
         var memberAuth = memberAuthRequest.fromMemberAuth();
         return authService.matchMemberAuthDictionary(memberAuth);
     }
+
+    @Operation(
+            summary = "권한 확인"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "권한 있음"),
+            @ApiResponse(responseCode = "204", description = "권한 없음")
+    })
+    @GetMapping("/member-auth-check")
+    public ResponseEntity<com.around.tdd.controller.response.ApiResponse<Boolean>> checkMemberAuth(
+            @RequestParam(value="memberSeq") Long memberSeq,
+            @RequestParam(value="memberAuthDictionarySeq") Long memberAuthDictionarySeq) {
+        Boolean result = authService.checkMemberAuth(memberSeq, memberAuthDictionarySeq);
+        if(!result){
+            return new ResponseEntity<>(new com.around.tdd.controller.response.ApiResponse<>(Map.of(), "권한 없음", HttpStatus.NO_CONTENT),HttpUtil.createJsonHeaders(), HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(new com.around.tdd.controller.response.ApiResponse<>(Map.of("result", result), "권한 있음", HttpStatus.OK), HttpUtil.createJsonHeaders(), HttpStatus.OK);
+    }
+
 }
