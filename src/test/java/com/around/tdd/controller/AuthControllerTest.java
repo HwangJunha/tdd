@@ -194,4 +194,46 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.data.memberAuthDictionary.authName").value(memberAuthDictionaryRequest.authName()));
         verify(authService).insertMemberAuthDictionary(any(MemberAuthDictionary.class));
     }
+
+    @Test
+    @DisplayName("권한 확인 테스트")
+    void checkMemberAuthOk() throws Exception {
+        //given
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        var memberSeq = 1L;
+        var memberAuthDictionarySeq = 1L;
+        params.add("memberSeq", String.valueOf(memberSeq));
+        params.add("memberAuthDictionarySeq", String.valueOf(memberAuthDictionarySeq));
+
+        //when
+        when(authService.checkMemberAuth(memberSeq, memberAuthDictionarySeq)).thenReturn(true);
+        mockMvc.perform(MockMvcRequestBuilders.get(baseUrl+"/member-auth-check")
+                .contentType(MediaType.APPLICATION_JSON)
+                .params(params)
+        )
+        .andExpect(jsonPath("$.status").value(HttpStatus.OK.name()))
+        .andExpect(jsonPath("$.message").value("권한 있음"));
+        verify(authService).checkMemberAuth(memberSeq, memberAuthDictionarySeq);
+    }
+
+    @Test
+    @DisplayName("권한 없음 테스트")
+    void checkMemberAuthNoContent() throws Exception {
+        //given
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        var memberSeq = 1L;
+        var memberAuthDictionarySeq = 1L;
+        params.add("memberSeq", String.valueOf(memberSeq));
+        params.add("memberAuthDictionarySeq", String.valueOf(memberAuthDictionarySeq));
+
+        //when
+        when(authService.checkMemberAuth(memberSeq, memberAuthDictionarySeq)).thenReturn(false);
+        mockMvc.perform(MockMvcRequestBuilders.get(baseUrl+"/member-auth-check")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .params(params)
+                )
+                .andExpect(jsonPath("$.status").value(HttpStatus.NO_CONTENT.name()))
+                .andExpect(jsonPath("$.message").value("권한 없음"));
+        verify(authService).checkMemberAuth(memberSeq, memberAuthDictionarySeq);
+    }
 }
