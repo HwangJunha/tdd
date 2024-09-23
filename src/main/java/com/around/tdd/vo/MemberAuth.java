@@ -26,5 +26,6 @@ public class MemberAuth {
     @MapsId("memberAuthDictionarySeq")
     @JoinColumn(name = "member_auth_dictionary_seq")
     @JsonManagedReference
+    @JsonIgnore
     private MemberAuthDictionary memberAuthDictionary;
 }

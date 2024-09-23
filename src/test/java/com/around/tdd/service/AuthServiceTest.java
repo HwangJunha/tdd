@@ -193,5 +193,42 @@ class AuthServiceTest {
         }
     }
 
+    @Nested
+    class RemoveMemberAuthTest{
+
+        private MemberAuthId memberAuthId;
+        private MemberAuth memberAuth;
+        private Long memberSeq = 1L;
+        private Long memberAuthDictionarySeq = 1L;
+
+        @BeforeEach
+        void setUp(){
+            //given
+            memberAuthId = new MemberAuthId(memberSeq, memberAuthDictionarySeq);
+            memberAuth = new MemberAuth();
+            memberAuth.setMemberAuthId(memberAuthId);
+        }
+
+        @Test
+        @DisplayName("권한이 존재하지 않은 테스트")
+        void testRemoveMemberAuthFail() {
+            //when
+            when(memberAuthRepository.findById(memberAuthId)).thenReturn(Optional.empty());
+            //then
+            var result = authService.removeMemberAuth(memberSeq, memberAuthDictionarySeq);
+            assertThat(result).isEmpty();
+        }
+
+        @Test
+        @DisplayName("권한이 존재하여 삭제가 된 테스트")
+        void testRemoveMemberAuthSuccess() {
+            //when
+            when(memberAuthRepository.findById(memberAuthId)).thenReturn(Optional.of(memberAuth));
+            //then
+            var result = authService.removeMemberAuth(memberSeq, memberAuthDictionarySeq);
+            assertThat(result.isPresent()).isTrue();
+            assertThat(result.get()).isEqualTo(memberAuth);
+        }
+    }
 
 }

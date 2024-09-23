@@ -159,4 +159,20 @@ public class AuthService {
         return true;
     }
 
+    /**
+     * 사용자 권한 삭제 메서드
+     * @param memberSeq - 사용자 번호
+     * @param memberAuthDictionarySeq - 권한 번호
+     * @return 삭제된 권한 반환
+     */
+    @Transactional
+    public Optional<MemberAuth> removeMemberAuth(Long memberSeq, Long memberAuthDictionarySeq) {
+        var optionalMemberAuth = memberAuthRepository.findById(new MemberAuthId(memberSeq, memberAuthDictionarySeq));
+        if(optionalMemberAuth.isEmpty()){
+            return Optional.empty();
+        }
+        memberAuthRepository.delete(optionalMemberAuth.get());
+        return optionalMemberAuth;
+    }
+
 }

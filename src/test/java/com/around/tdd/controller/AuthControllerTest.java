@@ -4,10 +4,7 @@ import com.around.tdd.config.EnableMockMvc;
 import com.around.tdd.service.AuthService;
 import com.around.tdd.service.EmailSendService;
 import com.around.tdd.service.MemberService;
-import com.around.tdd.vo.MailDto;
-import com.around.tdd.vo.Member;
-import com.around.tdd.vo.MemberAuthDictionary;
-import com.around.tdd.vo.MemberInfo;
+import com.around.tdd.vo.*;
 import com.around.tdd.vo.request.AuthRequest;
 import com.around.tdd.vo.request.MemberAuthDictionaryRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -235,5 +232,71 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.status").value(HttpStatus.NO_CONTENT.name()))
                 .andExpect(jsonPath("$.message").value("권한 없음"));
         verify(authService).checkMemberAuth(memberSeq, memberAuthDictionarySeq);
+    }
+
+    @Test
+    @DisplayName("권한 삭제 성공")
+    void testRemoveMemberAuthSuccess() throws Exception {
+        //given
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        var memberSeq = 1L;
+        var memberAuthDictionarySeq = 1L;
+        params.add("memberSeq", String.valueOf(memberSeq));
+        params.add("memberAuthDictionarySeq", String.valueOf(memberAuthDictionarySeq));
+
+        var memberAuthId = new MemberAuthId(memberSeq, memberAuthDictionarySeq);
+        var memberAuth = new MemberAuth();
+        memberAuth.setMemberAuthId(memberAuthId);
+        //when
+        when(authService.removeMemberAuth(memberSeq, memberAuthDictionarySeq)).thenReturn(Optional.of(memberAuth));
+        mockMvc.perform(MockMvcRequestBuilders.delete(baseUrl+"/member-auth")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .params(params)
+                )
+                .andExpect(jsonPath("$.status").value(HttpStatus.OK.name()))
+                .andExpect(jsonPath("$.message").value("권한 삭제 완료"));
+        verify(authService).removeMemberAuth(memberSeq, memberAuthDictionarySeq);
+    }
+
+    @Test
+    @DisplayName("권한 삭제 실패 권한 없음")
+    void testRemoveMemberAuthFail() throws Exception {
+        //given
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        var memberSeq = 1L;
+        var memberAuthDictionarySeq = 1L;
+        params.add("memberSeq", String.valueOf(memberSeq));
+        params.add("memberAuthDictionarySeq", String.valueOf(memberAuthDictionarySeq));
+
+        //when
+        when(authService.removeMemberAuth(memberSeq, memberAuthDictionarySeq)).thenReturn(Optional.empty());
+        mockMvc.perform(MockMvcRequestBuilders.delete(baseUrl+"/member-auth")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .params(params)
+                )
+                .andExpect(jsonPath("$.status").value(HttpStatus.NO_CONTENT.name()))
+                .andExpect(jsonPath("$.message").value("권한 없음"));
+        verify(authService).removeMemberAuth(memberSeq, memberAuthDictionarySeq);
+    }
+
+    @Test
+    @DisplayName("권한 삭제 사용자 번호 및 권한 최소값 확인")
+    void testRemoveMinMemberAuthFail() throws Exception {
+        //given
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        var memberSeq = 0L;
+        var memberAuthDictionarySeq = 0L;
+        params.add("memberSeq", String.valueOf(memberSeq));
+        params.add("memberAuthDictionarySeq", String.valueOf(memberAuthDictionarySeq));
+
+        //when
+        when(authService.removeMemberAuth(memberSeq, memberAuthDictionarySeq)).thenReturn(Optional.empty());
+        mockMvc.perform(MockMvcRequestBuilders.delete(baseUrl+"/member-auth")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .params(params)
+                )
+                .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.name()))
+                .andExpect(jsonPath("$.message").value("잘못된 요청"));
+        verify(authService, never()).removeMemberAuth(memberSeq, memberAuthDictionarySeq);
     }
 }
