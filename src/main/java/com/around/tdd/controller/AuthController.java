@@ -149,6 +149,10 @@ public class AuthController {
     public ResponseEntity<com.around.tdd.controller.response.ApiResponse<MemberAuth>> removeMemberAuth(
             @RequestParam(value="memberSeq") Long memberSeq,
             @RequestParam(value="memberAuthDictionarySeq") Long memberAuthDictionarySeq) {
+        if (memberSeq <= 0 || memberAuthDictionarySeq <= 0) {
+            return new ResponseEntity<>(new com.around.tdd.controller.response.ApiResponse<>(Map.of(), "잘못된 요청", HttpStatus.BAD_REQUEST), HttpUtil.createJsonHeaders(), HttpStatus.BAD_REQUEST);
+        }
+
         var optionalMemberAuth = authService.removeMemberAuth(memberSeq, memberAuthDictionarySeq);
         return optionalMemberAuth.map(memberAuth -> new ResponseEntity<>(new com.around.tdd.controller.response.ApiResponse<>(Map.of("memberAuth", memberAuth), "권한 삭제 완료", HttpStatus.OK), HttpUtil.createJsonHeaders(), HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(new com.around.tdd.controller.response.ApiResponse<>(Map.of(), "권한 없음", HttpStatus.NO_CONTENT), HttpUtil.createJsonHeaders(), HttpStatus.NO_CONTENT));

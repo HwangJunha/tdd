@@ -278,4 +278,25 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.message").value("권한 없음"));
         verify(authService).removeMemberAuth(memberSeq, memberAuthDictionarySeq);
     }
+
+    @Test
+    @DisplayName("권한 삭제 사용자 번호 및 권한 최소값 확인")
+    void testRemoveMinMemberAuthFail() throws Exception {
+        //given
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        var memberSeq = 0L;
+        var memberAuthDictionarySeq = 0L;
+        params.add("memberSeq", String.valueOf(memberSeq));
+        params.add("memberAuthDictionarySeq", String.valueOf(memberAuthDictionarySeq));
+
+        //when
+        when(authService.removeMemberAuth(memberSeq, memberAuthDictionarySeq)).thenReturn(Optional.empty());
+        mockMvc.perform(MockMvcRequestBuilders.delete(baseUrl+"/member-auth")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .params(params)
+                )
+                .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.name()))
+                .andExpect(jsonPath("$.message").value("잘못된 요청"));
+        verify(authService, never()).removeMemberAuth(memberSeq, memberAuthDictionarySeq);
+    }
 }
