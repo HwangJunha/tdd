@@ -3,7 +3,7 @@ package com.around.tdd.controller;
 import com.around.tdd.exception.BoardSaveException;
 import com.around.tdd.service.BoardService;
 import com.around.tdd.vo.Board;
-import com.around.tdd.vo.BoardDTO;
+import com.around.tdd.vo.request.BoardRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -40,16 +40,16 @@ public class BoardControllerTest {
     // 게시판 등록 성공 테스트
     @Test
     public void saveBoardSuccess() throws Exception {
-        BoardDTO boardDTO = createBoardDTO();
+        BoardRequest boardRequest = createBoardDTO();
         Board board = createBoard();
 
         ObjectMapper objectMapper = new ObjectMapper();
-        String boardDtoJson = objectMapper.writeValueAsString(boardDTO);
+        String boardDtoJson = objectMapper.writeValueAsString(boardRequest);
         MockMultipartFile boardDtoFile = createBoardDtoFile(boardDtoJson);
 
         MockMultipartFile mockImage = createMockImage();
 
-        when(boardService.savePost(any(BoardDTO.class), any())).thenReturn(board);
+        when(boardService.savePost(any(BoardRequest.class), any())).thenReturn(board);
         mockMvc.perform(MockMvcRequestBuilders.multipart(baseUrl + "/board")
                 .file(mockImage)
                 .file(boardDtoFile)
@@ -58,8 +58,8 @@ public class BoardControllerTest {
                 .andExpect(jsonPath("$.message").value("게시글 저장 성공"));
     }
 
-    private BoardDTO createBoardDTO() {
-        return BoardDTO.builder()
+    private BoardRequest createBoardDTO() {
+        return BoardRequest.builder()
                 .title("Test Title")
                 .memberId("yejin1224")
                 .content("Test Content")
@@ -95,17 +95,17 @@ public class BoardControllerTest {
     @Test
     public void testHandleBoardSaveException() throws Exception {
         // given
-        BoardDTO boardDTO = createBoardDTO();
+        BoardRequest boardRequest = createBoardDTO();
         Board board = createBoard();
 
         ObjectMapper objectMapper = new ObjectMapper();
 
-        String boardDtoJson = objectMapper.writeValueAsString(boardDTO);
+        String boardDtoJson = objectMapper.writeValueAsString(boardRequest);
         MockMultipartFile boardDtoFile = createBoardDtoFile(boardDtoJson);
 
         MockMultipartFile mockImage = createMockImage();
 
-        doThrow(new BoardSaveException("잘못된 요청입니다.")).when(boardService).savePost(any(BoardDTO.class), any());
+        doThrow(new BoardSaveException("잘못된 요청입니다.")).when(boardService).savePost(any(BoardRequest.class), any());
 
         //when
         mockMvc.perform(MockMvcRequestBuilders.multipart(baseUrl + "/board")

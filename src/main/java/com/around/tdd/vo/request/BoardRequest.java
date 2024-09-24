@@ -1,4 +1,4 @@
-package com.around.tdd.vo;
+package com.around.tdd.vo.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -6,7 +6,7 @@ import lombok.*;
 @Getter
 @Setter
 @Builder
-public class BoardDTO {
+public class BoardRequest {
     private Long boardSeq;
     private  String memberId;
 
@@ -15,4 +15,5 @@ public class BoardDTO {
 
     @NotBlank(message = "내용을 입력해주세요")
     private String content;
+
 }
