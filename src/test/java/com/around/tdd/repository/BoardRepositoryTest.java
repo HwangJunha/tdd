@@ -1,5 +1,6 @@
 package com.around.tdd.repository;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import com.around.tdd.vo.Board;
 import com.around.tdd.vo.Member;
 import org.junit.jupiter.api.DisplayName;
@@ -11,8 +12,6 @@ import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.LocalDateTime;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @ExtendWith(SpringExtension.class)
@@ -27,12 +26,10 @@ public class BoardRepositoryTest {
     @Rollback(value = false)
     public void saveBoardTest() {
         //given
-        Member member = Member
-                .builder()
-                .id("yejin1224")
-                .password("1234560")
-                .state(1)
-                .build();
+        Member member = new Member();
+        member.setId("yejin1224");
+        member.setPassword("1234560");
+        member.setState(1);
 
         Member savedMember = memberRepository.save(member);
 

@@ -6,7 +6,8 @@ import com.around.tdd.exception.BoardSaveException;
 import com.around.tdd.service.BoardService;
 import com.around.tdd.util.HttpUtil;
 import com.around.tdd.vo.Board;
-import com.around.tdd.vo.BoardDTO;
+import com.around.tdd.vo.request.BoardRequest;
+import com.around.tdd.vo.response.BoardResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -26,18 +27,18 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class BoardController {
         private final BoardService boardService;
+        HttpHeaders headers = HttpUtil.createJsonHeaders();
+
         @PostMapping("/board")
         public ResponseEntity<ApiResponse<String>> saveBoard(
-                @RequestPart("board") @Valid BoardDTO boardDTO,
+                @RequestPart("board") @Valid BoardRequest boardRequest,
                 @RequestPart("files") List<MultipartFile> boardImages) {
 
                 Map<String, String> responseData = new HashMap<>();
 
                 // TODO 관리자 권한 확인 필요
 
-                HttpHeaders headers = HttpUtil.createJsonHeaders();
-
-                Board board = boardService.savePost(boardDTO, boardImages);
+                Board board = boardService.savePost(boardRequest, boardImages);
 
                 responseData.put("savedBoardSeq", String.valueOf(board.getBoardSeq()));
                 responseData.put("title", board.getTitle());
@@ -59,5 +60,16 @@ public class BoardController {
                 );
 
                 return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
+
+        @GetMapping("/{id}")
+        public ResponseEntity<ApiResponse<BoardResponse>> getBoard(@PathVariable Long id) {
+                Map<String, BoardResponse> responseData = new HashMap<>();
+                BoardResponse boardResponse = boardService.getBoardById(id);
+
+                responseData.put("boardDetail", boardResponse);
+
+                ApiResponse<BoardResponse> response = new ApiResponse<>(responseData, "게시글 상세 조회 성공", HttpStatus.OK);
+                return new ResponseEntity<>(response, headers, HttpStatus.OK);
         }
 }

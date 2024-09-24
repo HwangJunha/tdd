@@ -55,13 +55,13 @@ public class BoardService {
 
     public Board saveBoard(BoardDTO boardDTO) {
         // TODO 회원 조회
-//        Member member = new Member();
-//        member.setMemberSeq(1L);
-//        member.setId("yejin1224");
-//        member.setPassword("123456");
+        Member member = new Member();
+        member.setMemberSeq(1L);
+        member.setId("yejin1224");
+        member.setPassword("123456");
 
         Board board = Board.builder()
-//                .member(member)
+                .member(member)
                 .title(boardDTO.getTitle())
                 .views(0)
                 .inputDt(LocalDateTime.now())

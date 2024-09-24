@@ -32,12 +32,10 @@ public class BoardContentRepositoryTest {
     @Rollback(value = false)
     public void saveBoardContent() {
         //given
-        Member member = Member
-                .builder()
-                .id("yejin1224")
-                .password("1234560")
-                .state(1)
-                .build();
+        Member member = new Member();
+        member.setId("yejin1224");
+        member.setPassword("1234560");
+        member.setState(1);
 
         Member savedMember = memberRepository.save(member);
 
