@@ -174,5 +174,4 @@ public class AuthService {
         memberAuthRepository.delete(optionalMemberAuth.get());
         return optionalMemberAuth;
     }
-
 }
