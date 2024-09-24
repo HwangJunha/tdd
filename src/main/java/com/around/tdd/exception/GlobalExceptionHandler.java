@@ -60,14 +60,14 @@ public class GlobalExceptionHandler {
     }
 
     // Exception 예외 처리
-//    @ExceptionHandler(Exception.class)
-//    public ResponseEntity<ErrorResponse> handleException(Exception ex, WebRequest request) {
-//        logger.error("{} occurred : {}", ex.getClass().getName(), ex.getMessage());
-//        return createErrorResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR,
-//                "예기치 못한 오류 발생",
-//                Map.of("error", ex.getMessage()),
-//                request);
-//    }
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleException(Exception ex, WebRequest request) {
+        logger.error("{} occurred : {}", ex.getClass().getName(), ex.getMessage());
+        return createErrorResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR,
+                "예기치 못한 오류 발생",
+                Map.of("error", ex.getMessage()),
+                request);
+    }
 
     // 예외 응답 반환
     private ResponseEntity<ErrorResponse> createErrorResponseEntity(HttpStatus status, String message, Map<String, String> errors, WebRequest request) {

@@ -1,5 +1,6 @@
 package com.around.tdd.vo;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -12,7 +13,7 @@ public enum AuthType {
     private final String redisKey;
 
     public static final Map<AuthType, String> AUTH_TYPE_MAP =
-            Stream.of(values()).collect(Collectors.toMap(e -> e, AuthType::getRedisKey));
+            Collections.unmodifiableMap(Stream.of(values()).collect(Collectors.toMap(e -> e, AuthType::getRedisKey)));
 
     AuthType(String redisKey) {
         this.redisKey = redisKey;
