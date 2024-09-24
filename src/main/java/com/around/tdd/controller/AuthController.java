@@ -43,12 +43,12 @@ public class AuthController {
     @PostMapping("/auth-number")
     public ResponseEntity<String> authNumber(@RequestBody AuthRequest authRequest) {
         Optional<Member> optionalMember = memberService.memberFindById(authRequest.getMemberSeq());
-        if(!optionalMember.isPresent()) {
+        if(optionalMember.isEmpty()) {
             return new ResponseEntity<>("사용자 정보가 없음",HttpUtil.createJsonHeaders(), HttpStatus.NO_CONTENT);
         }
         Member member = optionalMember.get();
         String authNumber = authService.getAuthNumber();
-        authService.saveAuth("auth-member:"+ authRequest.getMemberSeq(), authNumber);
+        authService.saveAuth(AuthType.AUTH_TYPE_MAP.get(authRequest.getAuthType())+":"+ authRequest.getMemberSeq(), authNumber);
         emailSendService.sendSimpleMessage(new MailDto("tdd@gmail.com", member.getMemberInfo().getEmail(), "인증번호", "인증번호:"+authNumber));
         return new ResponseEntity<>("인증번호 저장 성공",HttpUtil.createJsonHeaders(), HttpStatus.CREATED);
     }
@@ -63,7 +63,7 @@ public class AuthController {
     )
     @PostMapping("/auth-check")
     public ResponseEntity<String> authCheck(@RequestBody AuthRequest authRequest) {
-        boolean authCheck = authService.matchAuth("auth-member:"+ authRequest.getMemberSeq(), authRequest.getAuthNumber());
+        boolean authCheck = authService.matchAuth(AuthType.AUTH_TYPE_MAP.get(authRequest.getAuthType())+":"+ authRequest.getMemberSeq(), authRequest.getAuthNumber());
         if(!authCheck){
             return new ResponseEntity<>(String.valueOf(false),HttpUtil.createJsonHeaders(), HttpStatus.NO_CONTENT);
         }
@@ -152,9 +152,28 @@ public class AuthController {
         if (memberSeq <= 0 || memberAuthDictionarySeq <= 0) {
             return new ResponseEntity<>(new com.around.tdd.controller.response.ApiResponse<>(Map.of(), "잘못된 요청", HttpStatus.BAD_REQUEST), HttpUtil.createJsonHeaders(), HttpStatus.BAD_REQUEST);
         }
-
         var optionalMemberAuth = authService.removeMemberAuth(memberSeq, memberAuthDictionarySeq);
         return optionalMemberAuth.map(memberAuth -> new ResponseEntity<>(new com.around.tdd.controller.response.ApiResponse<>(Map.of("memberAuth", memberAuth), "권한 삭제 완료", HttpStatus.OK), HttpUtil.createJsonHeaders(), HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(new com.around.tdd.controller.response.ApiResponse<>(Map.of(), "권한 없음", HttpStatus.NO_CONTENT), HttpUtil.createJsonHeaders(), HttpStatus.NO_CONTENT));
+    }
+
+    @Operation(
+            summary = "조회 확인"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 완료"),
+            @ApiResponse(responseCode = "204", description = "인증 없음")
+    })
+    @GetMapping("/member-id")
+    public ResponseEntity<com.around.tdd.controller.response.ApiResponse<String>> getMemberId(
+            @RequestParam(value="memberSeq") Long memberSeq,
+            @RequestParam(value="authNumber") String authNumber,
+            @RequestParam(value="authType") AuthType authType) {
+        boolean authCheck = authService.matchAuth(AuthType.AUTH_TYPE_MAP.get(authType)+":"+ memberSeq, authNumber);
+        if(!authCheck){
+            return new ResponseEntity<>(new com.around.tdd.controller.response.ApiResponse<>(Map.of(), "인증번호 맞지 않음", HttpStatus.NO_CONTENT), HttpUtil.createJsonHeaders(), HttpStatus.NO_CONTENT);
+        }
+        var optionalMember = memberService.memberFindById(memberSeq);
+        return optionalMember.map(member -> new ResponseEntity<>(new com.around.tdd.controller.response.ApiResponse<>(Map.of("id", member.getId()), "조회 성공", HttpStatus.OK), HttpUtil.createJsonHeaders(), HttpStatus.OK)).orElseGet(() -> new ResponseEntity<>(new com.around.tdd.controller.response.ApiResponse<>(Map.of(), "사용자 없음", HttpStatus.NO_CONTENT), HttpUtil.createJsonHeaders(), HttpStatus.NO_CONTENT));
     }
 }

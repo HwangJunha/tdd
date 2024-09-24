@@ -299,4 +299,57 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.message").value("잘못된 요청"));
         verify(authService, never()).removeMemberAuth(memberSeq, memberAuthDictionarySeq);
     }
+
+    @Test
+    @DisplayName("아이디 조회 성공")
+    void testGetMemberIdSuccess() throws Exception {
+        //given
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        var memberSeq = 1L;
+        var authType = AuthType.FIND_MEMBER;
+        var authNumber = "123456";
+        params.add("memberSeq", String.valueOf(memberSeq));
+        params.add("authType", authType.name());
+        params.add("authNumber", authNumber);
+
+        var member = Member
+                .builder()
+                .id("junha1")
+                .build();
+
+        //when
+        when(authService.matchAuth(anyString(), eq(authNumber))).thenReturn(true);
+        when(memberService.memberFindById(memberSeq)).thenReturn(Optional.of(member));
+
+
+        mockMvc.perform(MockMvcRequestBuilders.get(baseUrl+"/member-id")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .params(params)
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("조회 성공"))
+                .andExpect(jsonPath("$.data.id").value("junha1"));
+    }
+
+    @Test
+    public void testGetMemberIdNoMember() throws Exception {
+        Long memberSeq = 0L;
+        String authNumber = "123456";
+        var authType = AuthType.FIND_MEMBER;
+
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("memberSeq", String.valueOf(memberSeq));
+        params.add("authType", authType.name());
+        params.add("authNumber", authNumber);
+
+        when(authService.matchAuth(anyString(), eq(authNumber))).thenReturn(true);
+        when(memberService.memberFindById(memberSeq)).thenReturn(Optional.empty());
+
+        mockMvc.perform(MockMvcRequestBuilders.get(baseUrl+"/member-id")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .params(params)
+                )
+                .andExpect(status().isNoContent())
+                .andExpect(jsonPath("$.message").value("사용자 없음"));
+    }
 }
