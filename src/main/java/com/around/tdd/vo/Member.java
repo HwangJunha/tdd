@@ -64,4 +64,12 @@ public class Member {
     public void setMemberAuthList(List<MemberAuth> memberAuthList) {
         this.memberAuthList = memberAuthList;
     }
+
+    public void setPassword(@NotNull String password) {
+        this.password = password;
+    }
+
+    public void setState(@NotNull Integer state) {
+        this.state = state;
+    }
 }

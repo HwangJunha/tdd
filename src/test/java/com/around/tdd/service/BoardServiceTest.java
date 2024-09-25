@@ -8,6 +8,7 @@ import com.around.tdd.repository.BoardRepository;
 import com.around.tdd.repository.MemberRepository;
 import com.around.tdd.vo.*;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,7 +22,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -44,6 +45,18 @@ public class BoardServiceTest {
     private BoardImageRepository boardImageRepository;
     @Mock
     private FileStorageService fileStorageService;
+
+    private Member member;
+
+    @BeforeEach
+    void setUp(){
+        this.member = Member
+                .builder()
+                .id("yejin1224")
+                .password("1234560")
+                .state(1)
+                .build();
+    }
 
     @Test
     @DisplayName("정상 게시판 등록 테스트")
@@ -83,11 +96,6 @@ public class BoardServiceTest {
     @DisplayName("정상 포스팅 테스트")
     void testSaveBoard() {
         //멤버 값 먼저 설정
-        Member member = new Member();
-        member.setMemberSeq(1L);
-        member.setId("yejin1224");
-        member.setPassword("1234560");
-        member.setState(1);
 
         // given
         BoardDTO boardDTO = BoardDTO.builder()
@@ -178,10 +186,6 @@ public class BoardServiceTest {
     @DisplayName("게시판 id로 조회 기능 테스트")
     public void testFindPostById() {
         // 멤버 설정
-        Member member = new Member();
-        member.setId("yejin1224");
-        member.setPassword("1234560");
-        member.setState(1);
 
         // 게시판 설정
         Board board = Board.builder()

@@ -332,6 +332,7 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("사용자 없음 테스트")
     public void testGetMemberIdNoMember() throws Exception {
         Long memberSeq = 0L;
         String authNumber = "123456";
@@ -351,5 +352,92 @@ class AuthControllerTest {
                 )
                 .andExpect(status().isNoContent())
                 .andExpect(jsonPath("$.message").value("사용자 없음"));
+    }
+
+    @Test
+    @DisplayName("패스워드 변경 성공 테스트")
+    void testPutMemberPasswordSuccessChange() throws Exception {
+        // Given
+        Long memberSeq = 1L;
+        String authNumber = "123456";
+        AuthType authType = AuthType.UPDATE_PASSWORD;
+        String password = "!!junha1234";
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+
+        params.add("memberSeq", String.valueOf(memberSeq));
+        params.add("authType", authType.name());
+        params.add("password", password);
+        params.add("authNumber", authNumber);
+
+        //when
+        when(authService.matchAuth(anyString(), eq(authNumber))).thenReturn(true);
+        when(memberService.checkPassword(eq(password))).thenReturn(true);
+        when(memberService.changePassword(eq(memberSeq), eq(password))).thenReturn(true);
+
+        // then
+        mockMvc.perform(MockMvcRequestBuilders.put(baseUrl+"/member-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .params(params)
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.isChanged").value("true"))
+                .andExpect(jsonPath("$.message").value("비밀번호 변경 완료"));
+
+    }
+
+    @Test
+    @DisplayName("인증번호 틀림 테스트")
+    void testPutMemberPasswordAuthNumberMismatch() throws Exception {
+        // Given
+        Long memberSeq = 1L;
+        String authNumber = "123456";
+        AuthType authType = AuthType.UPDATE_PASSWORD;
+        String password = "!!junha123456";
+
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+
+        params.add("memberSeq", String.valueOf(memberSeq));
+        params.add("authType", authType.name());
+        params.add("password", password);
+        params.add("authNumber", authNumber);
+
+        // Mocking
+        when(authService.matchAuth(anyString(), eq(authNumber))).thenReturn(false);
+
+        mockMvc.perform(MockMvcRequestBuilders.put(baseUrl+"/member-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .params(params)
+                )
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value("인증번호 맞지 않음"));
+    }
+
+    @Test
+    @DisplayName("패스워드 형식이 올바르지 않음")
+    void testPutMemberPasswordInvalidPasswordFormat() throws Exception {
+        // Given
+        Long memberSeq = 1L;
+        String authNumber = "123456";
+        AuthType authType = AuthType.UPDATE_PASSWORD;
+        String password = "123456";  // 비밀번호 형식이 올바르지 않음
+
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+
+        params.add("memberSeq", String.valueOf(memberSeq));
+        params.add("authType", authType.name());
+        params.add("password", password);
+        params.add("authNumber", authNumber);
+
+        // Mocking
+        when(authService.matchAuth(anyString(), eq(authNumber))).thenReturn(true);
+        when(memberService.checkPassword(eq(password))).thenReturn(false);
+
+        // When
+        mockMvc.perform(MockMvcRequestBuilders.put(baseUrl+"/member-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .params(params)
+                )
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.message").value("패스워드 형식이 맞지 않음"));
     }
 }
