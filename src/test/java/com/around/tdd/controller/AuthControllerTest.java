@@ -8,7 +8,9 @@ import com.around.tdd.vo.*;
 import com.around.tdd.vo.request.AuthRequest;
 import com.around.tdd.vo.request.MemberAuthDictionaryRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -332,6 +334,7 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("사용자 없음 테스트")
     public void testGetMemberIdNoMember() throws Exception {
         Long memberSeq = 0L;
         String authNumber = "123456";
@@ -352,4 +355,78 @@ class AuthControllerTest {
                 .andExpect(status().isNoContent())
                 .andExpect(jsonPath("$.message").value("사용자 없음"));
     }
+
+    @Nested
+    class PasswordUpdateTest{
+
+        private MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        private Long memberSeq = 1L;
+        private String authNumber = "123456";
+        private AuthType authType = AuthType.UPDATE_PASSWORD;
+        private String password = "!!junha1234";
+
+        @BeforeEach
+        void setUp(){
+            params.add("memberSeq", String.valueOf(memberSeq));
+            params.add("authType", authType.name());
+            params.add("password", password);
+            params.add("authNumber", authNumber);
+        }
+
+        @Test
+        @DisplayName("패스워드 변경 성공 테스트")
+        void testPutMemberPasswordSuccessChange() throws Exception {
+            //when
+            when(authService.matchAuth(anyString(), eq(authNumber))).thenReturn(true);
+            when(memberService.checkPassword(eq(password))).thenReturn(true);
+            when(memberService.changePassword(eq(memberSeq), eq(password))).thenReturn(true);
+
+            // then
+            mockMvc.perform(MockMvcRequestBuilders.put(baseUrl+"/member-password")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .params(params)
+                    )
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.isChanged").value("true"))
+                    .andExpect(jsonPath("$.message").value("비밀번호 변경 완료"));
+
+        }
+
+        @Test
+        @DisplayName("인증번호 틀림 테스트")
+        void testPutMemberPasswordAuthNumberMismatch() throws Exception {
+
+            // When
+            when(authService.matchAuth(anyString(), eq(authNumber))).thenReturn(false);
+
+            mockMvc.perform(MockMvcRequestBuilders.put(baseUrl+"/member-password")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .params(params)
+                    )
+                    .andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.message").value("인증번호 맞지 않음"));
+        }
+
+        @Test
+        @DisplayName("패스워드 형식이 올바르지 않음")
+        void testPutMemberPasswordInvalidPasswordFormat() throws Exception {
+            // Given
+            this.password = "123456";  // 비밀번호 형식이 올바르지 않음
+            params.add("password", password);
+
+            // Mocking
+            when(authService.matchAuth(anyString(), eq(authNumber))).thenReturn(true);
+            when(memberService.checkPassword(eq(password))).thenReturn(false);
+
+            // When
+            mockMvc.perform(MockMvcRequestBuilders.put(baseUrl+"/member-password")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .params(params)
+                    )
+                    .andExpect(status().isAccepted())
+                    .andExpect(jsonPath("$.message").value("패스워드 형식이 맞지 않음"));
+        }
+    }
+
+
 }

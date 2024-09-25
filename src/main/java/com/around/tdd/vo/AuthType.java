@@ -8,6 +8,7 @@ import java.util.stream.Stream;
 public enum AuthType {
     AUTH_NUMBER("auth-member"),
     FIND_MEMBER("find-member"),
+    UPDATE_PASSWORD("update-password"),
     NONE("none");
 
     private final String redisKey;

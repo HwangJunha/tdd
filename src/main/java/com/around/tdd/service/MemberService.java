@@ -83,4 +83,19 @@ public class MemberService {
         return memberRepository.findById(memberSeq);
     }
 
+    /**
+     * 조회 후 패스워드를 변경한다
+     * @param memberSeq - 사용자 번호
+     * @param newPassword - 새로운 패스워드
+     * @return - true: 패스워드 변경 완료, false: 패스워드 변경 실패
+     */
+    @Transactional
+    public boolean changePassword(Long memberSeq, String newPassword){
+        var savedMember = memberRepository.findById(memberSeq);
+        if(savedMember.isEmpty()){
+            return false;
+        }
+        savedMember.get().setPassword(newPassword);
+        return true;
+    }
 }
