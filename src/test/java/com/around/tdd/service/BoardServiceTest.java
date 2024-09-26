@@ -7,6 +7,8 @@ import com.around.tdd.repository.BoardImageRepository;
 import com.around.tdd.repository.BoardRepository;
 import com.around.tdd.repository.MemberRepository;
 import com.around.tdd.vo.*;
+import com.around.tdd.vo.request.BoardRequest;
+import com.around.tdd.vo.response.BoardResponse;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -61,7 +63,7 @@ public class BoardServiceTest {
 
         when(boardContentRepository.save(any(BoardContent.class))).thenReturn(mockBoardContent);
 
-        BoardDTO boardDTO = BoardDTO.builder()
+        BoardRequest boardRequest = BoardRequest.builder()
                 .title("Test Title")
                 .memberId("yejin1224")
                 .content("Test Content")
@@ -71,7 +73,7 @@ public class BoardServiceTest {
 
 
         // BoardService의 savePost 메서드 호출
-        Board savedBoard = boardService.savePost(boardDTO, mockFiles);
+        Board savedBoard = boardService.savePost(boardRequest, mockFiles);
 
         // 결과 검증
         assert savedBoard != null;
@@ -83,23 +85,26 @@ public class BoardServiceTest {
     @DisplayName("정상 포스팅 테스트")
     void testSaveBoard() {
         //멤버 값 먼저 설정
-        Member member = new Member();
-        member.setMemberSeq(1L);
-        member.setId("yejin1224");
-        member.setPassword("1234560");
-        member.setState(1);
+        // Member member = new Member();
+        Member member = Member.builder()
+                .id("yejin1224")
+                .build();
+//        member.setMemberSeq(1L);
+//        member.setId("yejin1224");
+//        member.setPassword("1234560");
+//        member.setState(1);
 
         // given
-        BoardDTO boardDTO = BoardDTO.builder()
+        BoardRequest boardRequest = BoardRequest.builder()
                 .title("제목 test")
                 .memberId(member.getId())
                 .build();
 
-        boardDTO.setTitle("제목 test");
-        boardDTO.setMemberId(member.getId());
+        boardRequest.setTitle("제목 test");
+        boardRequest.setMemberId(member.getId());
 
         Board board = Board.builder()
-                .title(boardDTO.getTitle())
+                .title(boardRequest.getTitle())
                 .views(0)
                 .inputDt(LocalDateTime.now())
                 .updateDT(LocalDateTime.now())
@@ -109,7 +114,7 @@ public class BoardServiceTest {
         when(boardRepository.save(any(Board.class))).thenReturn(board);
 
         //when
-        Board saveBoard = boardService.saveBoard(boardDTO);
+        Board saveBoard = boardService.saveBoard(boardRequest);
 
         //then
         Assertions.assertEquals("제목 test", saveBoard.getTitle());
@@ -129,14 +134,14 @@ public class BoardServiceTest {
                 .content("Test Board Content")
                 .build();
 
-        BoardDTO boardDTO = BoardDTO.builder()
+        BoardRequest boardRequest = BoardRequest.builder()
                 .content(boardContent.getContent())
                 .build();
 
         when(boardContentRepository.save(any(BoardContent.class))).thenReturn(boardContent);
 
         //when
-        BoardContent savedBoardContent = boardService.saveBoardContent(boardDTO, board);
+        BoardContent savedBoardContent = boardService.saveBoardContent(boardRequest, board);
 
         //then
         Assertions.assertEquals("Test Board Content", savedBoardContent.getContent());
@@ -175,13 +180,12 @@ public class BoardServiceTest {
     }
 
     @Test
-    @DisplayName("게시판 id로 조회 기능 테스트")
-    public void testFindPostById() {
+    @DisplayName("게시판 상세 조회 성공 테스트")
+    public void testGetBoardByIdSuccess() {
         // 멤버 설정
-        Member member = new Member();
-        member.setId("yejin1224");
-        member.setPassword("1234560");
-        member.setState(1);
+        Member member = Member.builder()
+                .id("yejin1224")
+                .build();
 
         // 게시판 설정
         Board board = Board.builder()
@@ -193,25 +197,35 @@ public class BoardServiceTest {
                 .views(0)
                 .build();
 
+        BoardContent boardContent = BoardContent.builder()
+                .boardSeq(1L)
+                .content("content test")
+                .build();
+
         //given
         when(boardRepository.findById(1L)).thenReturn(Optional.of(board));
-        Board foundBoard = boardService.findPostById(1L);
+        when(boardContentRepository.findById(1L)).thenReturn(Optional.of(boardContent));
+
+        // when
+        BoardResponse responseBoard = boardService.getBoardById(1L);
 
         //then
-        Assertions.assertNotNull(foundBoard);
-        Assertions.assertEquals(board.getBoardSeq(), foundBoard.getBoardSeq());
-        Assertions.assertEquals(board.getTitle(), foundBoard.getTitle());
+        Assertions.assertNotNull(responseBoard);
+        Assertions.assertEquals(board.getBoardSeq(), responseBoard.getBoardSeq());
+        Assertions.assertEquals(board.getTitle(), responseBoard.getTitle());
+        Assertions.assertEquals(board.getViews(), responseBoard.getViews());
+        Assertions.assertEquals(boardContent.getContent(), responseBoard.getContent());
     }
 
     @Test
     public void testValidationBoardRequestImoji() {
-        BoardDTO boardDTO = BoardDTO.builder()
+        BoardRequest boardRequest = BoardRequest.builder()
                 .title("Test Title")
                 .content("Valid content with emojis 😊😂👍")
                 .build();
 
         List<MultipartFile> mockFiles = createMockImages();
-        boardService.savePost(boardDTO, mockFiles);
+        boardService.savePost(boardRequest, mockFiles);
 
         verify(boardRepository, times(1)).save(any(Board.class));
     }
@@ -220,37 +234,37 @@ public class BoardServiceTest {
     public void testValidationBoardRequestTitleTooLong() {
         // 1001자 제목
         String longTitle = "t".repeat(1001);
-        BoardDTO boardDTO = BoardDTO.builder()
+        BoardRequest boardRequest = BoardRequest.builder()
                 .title(longTitle)
                 .content("Valid Content")
                 .build();
 
         List<MultipartFile> mockFiles = createMockImages();
-        assertThrows(BoardSaveException.class, () -> boardService.savePost(boardDTO, mockFiles));
+        assertThrows(BoardSaveException.class, () -> boardService.savePost(boardRequest, mockFiles));
     }
 
     @Test
     public void testValidationBoardRequestContentTooLong() {
         // 160,001자 내용
         String longContent = "a".repeat(160001);
-        BoardDTO boardDTO = BoardDTO.builder()
+        BoardRequest boardRequest = BoardRequest.builder()
                 .title("Valid Title")
                 .content(longContent)
                 .build();
 
         List<MultipartFile> mockFiles = createMockImages();
-        assertThrows(BoardSaveException.class, () -> boardService.savePost(boardDTO, mockFiles));
+        assertThrows(BoardSaveException.class, () -> boardService.savePost(boardRequest, mockFiles));
     }
 
     @Test
     public void testValidationBoardRequestContentBlank() {
-        BoardDTO boardDTO = BoardDTO.builder()
+        BoardRequest boardRequest = BoardRequest.builder()
                 .title("Valid Title")
                 .content("")
                 .build();
 
         List<MultipartFile> mockFiles = createMockImages();
-        assertThrows(BoardSaveException.class, () -> boardService.savePost(boardDTO, mockFiles));
+        assertThrows(BoardSaveException.class, () -> boardService.savePost(boardRequest, mockFiles));
     }
 
     public List<MultipartFile> createMockImages() {

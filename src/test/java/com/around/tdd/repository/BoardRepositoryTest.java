@@ -26,10 +26,9 @@ public class BoardRepositoryTest {
     @Rollback(value = false)
     public void saveBoardTest() {
         //given
-        Member member = new Member();
-        member.setId("yejin1224");
-        member.setPassword("1234560");
-        member.setState(1);
+        Member member = Member.builder()
+                .id("yejin1224")
+                .build();
 
         Member savedMember = memberRepository.save(member);
 
