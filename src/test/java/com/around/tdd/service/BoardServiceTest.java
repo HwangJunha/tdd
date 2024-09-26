@@ -89,10 +89,6 @@ public class BoardServiceTest {
         Member member = Member.builder()
                 .id("yejin1224")
                 .build();
-//        member.setMemberSeq(1L);
-//        member.setId("yejin1224");
-//        member.setPassword("1234560");
-//        member.setState(1);
 
         // given
         BoardRequest boardRequest = BoardRequest.builder()
@@ -215,6 +211,45 @@ public class BoardServiceTest {
         Assertions.assertEquals(board.getTitle(), responseBoard.getTitle());
         Assertions.assertEquals(board.getViews(), responseBoard.getViews());
         Assertions.assertEquals(boardContent.getContent(), responseBoard.getContent());
+    }
+
+    @Test
+    @DisplayName("게시판 상세조회 게시글 존재하지 않은 경우 테스트")
+    public void testGetBoardByIdBoardNotFound() {
+        Long boardSeq = 1L;
+
+        //given
+        when(boardRepository.findById(1L)).thenReturn(Optional.empty());
+
+        //when
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            boardService.getBoardById(boardSeq);
+        });
+
+        //then
+        Assertions.assertEquals("게시글을 찾을 수 없습니다.", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("게시판 상세 조회 게시글 내용 존재하지 않은 경우 테스트")
+    public void testGetBoardByIdBoardContentNotFound() {
+        Long boardSeq = 1L;
+        Board board = Board.builder()
+                .boardSeq(boardSeq)
+                .title("Test0 Title")
+                .build();
+
+        //given
+        when(boardRepository.findById(boardSeq)).thenReturn(Optional.of(board));
+        when(boardContentRepository.findById(boardSeq)).thenReturn(Optional.empty());
+
+        // when
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            boardService.getBoardById(boardSeq);
+        });
+
+        //then
+        Assertions.assertEquals("게시글 내용을 찾을 수 없습니다.", exception.getMessage());
     }
 
     @Test

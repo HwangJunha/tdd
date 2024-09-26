@@ -1,5 +1,6 @@
 package com.around.tdd.service;
 
+import com.around.tdd.exception.BoardNotFoundException;
 import com.around.tdd.exception.BoardSaveException;
 import com.around.tdd.repository.BoardContentRepository;
 import com.around.tdd.repository.BoardImageRepository;
@@ -103,8 +104,8 @@ public class BoardService {
     }
 
     public BoardResponse getBoardById(Long boardSeq) {
-        Board board = boardRepository.findById(boardSeq).orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
-        BoardContent boardContent = boardContentRepository.findById(boardSeq).orElseThrow(() -> new IllegalArgumentException("게시글 내용을 찾을 수 없습니다."));
+        Board board = boardRepository.findById(boardSeq).orElseThrow(() -> new BoardNotFoundException("게시글을 찾을 수 없습니다."));
+        BoardContent boardContent = boardContentRepository.findById(boardSeq).orElseThrow(() -> new BoardNotFoundException("게시글 내용을 찾을 수 없습니다."));
 
         BoardResponse boardResponse = BoardResponse.builder()
                 .boardSeq(boardSeq)

@@ -2,6 +2,7 @@ package com.around.tdd.controller;
 
 import com.around.tdd.controller.response.ApiResponse;
 import com.around.tdd.controller.response.ErrorResponse;
+import com.around.tdd.exception.BoardNotFoundException;
 import com.around.tdd.exception.BoardSaveException;
 import com.around.tdd.service.BoardService;
 import com.around.tdd.util.HttpUtil;
@@ -23,13 +24,13 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/board")
 @RequiredArgsConstructor
 public class BoardController {
         private final BoardService boardService;
         HttpHeaders headers = HttpUtil.createJsonHeaders();
 
-        @PostMapping("/board")
+        @PostMapping("/")
         public ResponseEntity<ApiResponse<String>> saveBoard(
                 @RequestPart("board") @Valid BoardRequest boardRequest,
                 @RequestPart("files") List<MultipartFile> boardImages) {
@@ -62,14 +63,28 @@ public class BoardController {
                 return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
         }
 
-        @GetMapping("/{id}")
-        public ResponseEntity<ApiResponse<BoardResponse>> getBoard(@PathVariable Long id) {
+        @GetMapping("/detail")
+        public ResponseEntity<ApiResponse<BoardResponse>> getBoardDetail(@RequestParam(value="boardSeq") Long boardSeq) {
                 Map<String, BoardResponse> responseData = new HashMap<>();
-                BoardResponse boardResponse = boardService.getBoardById(id);
+                BoardResponse boardResponse = boardService.getBoardById(boardSeq);
 
                 responseData.put("boardDetail", boardResponse);
 
                 ApiResponse<BoardResponse> response = new ApiResponse<>(responseData, "게시글 상세 조회 성공", HttpStatus.OK);
                 return new ResponseEntity<>(response, headers, HttpStatus.OK);
         }
+
+        @ExceptionHandler(BoardNotFoundException.class)
+        public ResponseEntity<ErrorResponse>  getBoardDetailException (BoardNotFoundException ex, WebRequest request) {
+                ErrorResponse errorResponse = new ErrorResponse(
+                        HttpStatus.NO_CONTENT.value(),
+                        ex.getMessage(),
+                        LocalDateTime.now(),
+                        "/api/v1/board/detail",
+                        Map.of("error", ex.getMessage())
+                );
+
+                return new ResponseEntity<>(errorResponse, HttpStatus.NO_CONTENT);
+        }
+
 }
