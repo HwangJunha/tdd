@@ -4,17 +4,19 @@ import com.around.tdd.config.EnableMockMvc;
 import com.around.tdd.service.AuthService;
 import com.around.tdd.service.EmailSendService;
 import com.around.tdd.service.MemberService;
-import com.around.tdd.vo.MailDto;
-import com.around.tdd.vo.Member;
-import com.around.tdd.vo.MemberInfo;
+import com.around.tdd.vo.*;
 import com.around.tdd.vo.request.AuthRequest;
+import com.around.tdd.vo.request.MemberAuthDictionaryRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -27,8 +29,7 @@ import java.util.Optional;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ActiveProfiles("test")
 @EnableMockMvc //한글 깨짐 방지
@@ -174,4 +175,258 @@ class AuthControllerTest {
                 .andExpect(status().isNoContent())
                 .andExpect(content().string("false"));
     }
+
+    @Test
+    @DisplayName("권한 등록 테스트")
+    void memberAuthDictionaryInsert() throws Exception {
+        //given
+        var memberAuthDictionaryRequest = new MemberAuthDictionaryRequest(0L, "신규권한");
+        var content = objectMapper.writeValueAsString(memberAuthDictionaryRequest);
+        var memberAuthDictionary = memberAuthDictionaryRequest.fromMemberAuthDictionary();
+        //when & then
+        when(authService.insertMemberAuthDictionary(any(MemberAuthDictionary.class))).thenReturn(memberAuthDictionary);
+        mockMvc.perform(MockMvcRequestBuilders.post(baseUrl+"/member-auth-dictionary")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(content)
+                )
+                .andExpect(jsonPath("$.status").value(HttpStatus.CREATED.name()))
+                .andExpect(jsonPath("$.data.memberAuthDictionary.authName").value(memberAuthDictionaryRequest.authName()));
+        verify(authService).insertMemberAuthDictionary(any(MemberAuthDictionary.class));
+    }
+
+    @Test
+    @DisplayName("권한 확인 테스트")
+    void checkMemberAuthOk() throws Exception {
+        //given
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        var memberSeq = 1L;
+        var memberAuthDictionarySeq = 1L;
+        params.add("memberSeq", String.valueOf(memberSeq));
+        params.add("memberAuthDictionarySeq", String.valueOf(memberAuthDictionarySeq));
+
+        //when
+        when(authService.checkMemberAuth(memberSeq, memberAuthDictionarySeq)).thenReturn(true);
+        mockMvc.perform(MockMvcRequestBuilders.get(baseUrl+"/member-auth-check")
+                .contentType(MediaType.APPLICATION_JSON)
+                .params(params)
+        )
+        .andExpect(jsonPath("$.status").value(HttpStatus.OK.name()))
+        .andExpect(jsonPath("$.message").value("권한 있음"));
+        verify(authService).checkMemberAuth(memberSeq, memberAuthDictionarySeq);
+    }
+
+    @Test
+    @DisplayName("권한 없음 테스트")
+    void checkMemberAuthNoContent() throws Exception {
+        //given
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        var memberSeq = 1L;
+        var memberAuthDictionarySeq = 1L;
+        params.add("memberSeq", String.valueOf(memberSeq));
+        params.add("memberAuthDictionarySeq", String.valueOf(memberAuthDictionarySeq));
+
+        //when
+        when(authService.checkMemberAuth(memberSeq, memberAuthDictionarySeq)).thenReturn(false);
+        mockMvc.perform(MockMvcRequestBuilders.get(baseUrl+"/member-auth-check")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .params(params)
+                )
+                .andExpect(jsonPath("$.status").value(HttpStatus.NO_CONTENT.name()))
+                .andExpect(jsonPath("$.message").value("권한 없음"));
+        verify(authService).checkMemberAuth(memberSeq, memberAuthDictionarySeq);
+    }
+
+    @Test
+    @DisplayName("권한 삭제 성공")
+    void testRemoveMemberAuthSuccess() throws Exception {
+        //given
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        var memberSeq = 1L;
+        var memberAuthDictionarySeq = 1L;
+        params.add("memberSeq", String.valueOf(memberSeq));
+        params.add("memberAuthDictionarySeq", String.valueOf(memberAuthDictionarySeq));
+
+        var memberAuthId = new MemberAuthId(memberSeq, memberAuthDictionarySeq);
+        var memberAuth = new MemberAuth();
+        memberAuth.setMemberAuthId(memberAuthId);
+        //when
+        when(authService.removeMemberAuth(memberSeq, memberAuthDictionarySeq)).thenReturn(Optional.of(memberAuth));
+        mockMvc.perform(MockMvcRequestBuilders.delete(baseUrl+"/member-auth")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .params(params)
+                )
+                .andExpect(jsonPath("$.status").value(HttpStatus.OK.name()))
+                .andExpect(jsonPath("$.message").value("권한 삭제 완료"));
+        verify(authService).removeMemberAuth(memberSeq, memberAuthDictionarySeq);
+    }
+
+    @Test
+    @DisplayName("권한 삭제 실패 권한 없음")
+    void testRemoveMemberAuthFail() throws Exception {
+        //given
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        var memberSeq = 1L;
+        var memberAuthDictionarySeq = 1L;
+        params.add("memberSeq", String.valueOf(memberSeq));
+        params.add("memberAuthDictionarySeq", String.valueOf(memberAuthDictionarySeq));
+
+        //when
+        when(authService.removeMemberAuth(memberSeq, memberAuthDictionarySeq)).thenReturn(Optional.empty());
+        mockMvc.perform(MockMvcRequestBuilders.delete(baseUrl+"/member-auth")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .params(params)
+                )
+                .andExpect(jsonPath("$.status").value(HttpStatus.NO_CONTENT.name()))
+                .andExpect(jsonPath("$.message").value("권한 없음"));
+        verify(authService).removeMemberAuth(memberSeq, memberAuthDictionarySeq);
+    }
+
+    @Test
+    @DisplayName("권한 삭제 사용자 번호 및 권한 최소값 확인")
+    void testRemoveMinMemberAuthFail() throws Exception {
+        //given
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        var memberSeq = 0L;
+        var memberAuthDictionarySeq = 0L;
+        params.add("memberSeq", String.valueOf(memberSeq));
+        params.add("memberAuthDictionarySeq", String.valueOf(memberAuthDictionarySeq));
+
+        //when
+        when(authService.removeMemberAuth(memberSeq, memberAuthDictionarySeq)).thenReturn(Optional.empty());
+        mockMvc.perform(MockMvcRequestBuilders.delete(baseUrl+"/member-auth")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .params(params)
+                )
+                .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.name()))
+                .andExpect(jsonPath("$.message").value("잘못된 요청"));
+        verify(authService, never()).removeMemberAuth(memberSeq, memberAuthDictionarySeq);
+    }
+
+    @Test
+    @DisplayName("아이디 조회 성공")
+    void testGetMemberIdSuccess() throws Exception {
+        //given
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        var memberSeq = 1L;
+        var authType = AuthType.FIND_MEMBER;
+        var authNumber = "123456";
+        params.add("memberSeq", String.valueOf(memberSeq));
+        params.add("authType", authType.name());
+        params.add("authNumber", authNumber);
+
+        var member = Member
+                .builder()
+                .id("junha1")
+                .build();
+
+        //when
+        when(authService.matchAuth(anyString(), eq(authNumber))).thenReturn(true);
+        when(memberService.memberFindById(memberSeq)).thenReturn(Optional.of(member));
+
+
+        mockMvc.perform(MockMvcRequestBuilders.get(baseUrl+"/member-id")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .params(params)
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("조회 성공"))
+                .andExpect(jsonPath("$.data.id").value("junha1"));
+    }
+
+    @Test
+    @DisplayName("사용자 없음 테스트")
+    public void testGetMemberIdNoMember() throws Exception {
+        Long memberSeq = 0L;
+        String authNumber = "123456";
+        var authType = AuthType.FIND_MEMBER;
+
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("memberSeq", String.valueOf(memberSeq));
+        params.add("authType", authType.name());
+        params.add("authNumber", authNumber);
+
+        when(authService.matchAuth(anyString(), eq(authNumber))).thenReturn(true);
+        when(memberService.memberFindById(memberSeq)).thenReturn(Optional.empty());
+
+        mockMvc.perform(MockMvcRequestBuilders.get(baseUrl+"/member-id")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .params(params)
+                )
+                .andExpect(status().isNoContent())
+                .andExpect(jsonPath("$.message").value("사용자 없음"));
+    }
+
+    @Nested
+    class PasswordUpdateTest{
+
+        private MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        private Long memberSeq = 1L;
+        private String authNumber = "123456";
+        private AuthType authType = AuthType.UPDATE_PASSWORD;
+        private String password = "!!junha1234";
+
+        @BeforeEach
+        void setUp(){
+            params.add("memberSeq", String.valueOf(memberSeq));
+            params.add("authType", authType.name());
+            params.add("password", password);
+            params.add("authNumber", authNumber);
+        }
+
+        @Test
+        @DisplayName("패스워드 변경 성공 테스트")
+        void testPutMemberPasswordSuccessChange() throws Exception {
+            //when
+            when(authService.matchAuth(anyString(), eq(authNumber))).thenReturn(true);
+            when(memberService.checkPassword(eq(password))).thenReturn(true);
+            when(memberService.changePassword(eq(memberSeq), eq(password))).thenReturn(true);
+
+            // then
+            mockMvc.perform(MockMvcRequestBuilders.put(baseUrl+"/member-password")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .params(params)
+                    )
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.isChanged").value("true"))
+                    .andExpect(jsonPath("$.message").value("비밀번호 변경 완료"));
+
+        }
+
+        @Test
+        @DisplayName("인증번호 틀림 테스트")
+        void testPutMemberPasswordAuthNumberMismatch() throws Exception {
+
+            // When
+            when(authService.matchAuth(anyString(), eq(authNumber))).thenReturn(false);
+
+            mockMvc.perform(MockMvcRequestBuilders.put(baseUrl+"/member-password")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .params(params)
+                    )
+                    .andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.message").value("인증번호 맞지 않음"));
+        }
+
+        @Test
+        @DisplayName("패스워드 형식이 올바르지 않음")
+        void testPutMemberPasswordInvalidPasswordFormat() throws Exception {
+            // Given
+            this.password = "123456";  // 비밀번호 형식이 올바르지 않음
+            params.add("password", password);
+
+            // Mocking
+            when(authService.matchAuth(anyString(), eq(authNumber))).thenReturn(true);
+            when(memberService.checkPassword(eq(password))).thenReturn(false);
+
+            // When
+            mockMvc.perform(MockMvcRequestBuilders.put(baseUrl+"/member-password")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .params(params)
+                    )
+                    .andExpect(status().isAccepted())
+                    .andExpect(jsonPath("$.message").value("패스워드 형식이 맞지 않음"));
+        }
+    }
+
+
 }

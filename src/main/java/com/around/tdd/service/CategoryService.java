@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.NoSuchElementException;
 
 @Transactional(readOnly = true)
 @Service
@@ -38,8 +38,9 @@ public class CategoryService {
 
         // 부모 카테고리 존재 시 연관관계 설정
         if (categorySaveRequest.getParentCategorySeq() != null && categorySaveRequest.getParentCategorySeq() > 0) {
-            Optional<Category> parentCategory = categoryRepository.findById(categorySaveRequest.getParentCategorySeq());
-            parentCategory.ifPresent(category::linkParentCategory);
+            Category parentCategory = categoryRepository.findById(categorySaveRequest.getParentCategorySeq())
+                                            .orElseThrow(() -> new NoSuchElementException("부모 카테고리"));
+            parentCategory.addChildCategory(category);
         }
 
         // 카테고리 저장
@@ -73,6 +74,26 @@ public class CategoryService {
         Category category = categoryRepository.findById(categorySeq)
                                 .orElseThrow(() -> new RuntimeException("카테고리가 존재하지 않습니다."));
         return convertToDto(category);
+    }
+
+    /**
+     * 카테고리 단일 제거
+     * @param categorySeq
+     */
+    @Transactional
+    public void deleteCategory(Long categorySeq) {
+        if (!categoryRepository.existsById(categorySeq)) {
+            throw new NoSuchElementException("카테고리를 찾을 수 없습니다.");
+        }
+        categoryRepository.deleteById(categorySeq);
+    }
+
+    /**
+     * 카테고리 전체 제거
+     */
+    @Transactional
+    public void deleteAllCategory() {
+        categoryRepository.deleteAll();
     }
 
     /**

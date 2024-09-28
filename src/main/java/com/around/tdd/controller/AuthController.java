@@ -4,9 +4,10 @@ import com.around.tdd.service.AuthService;
 import com.around.tdd.service.EmailSendService;
 import com.around.tdd.service.MemberService;
 import com.around.tdd.util.HttpUtil;
-import com.around.tdd.vo.MailDto;
-import com.around.tdd.vo.Member;
+import com.around.tdd.vo.*;
 import com.around.tdd.vo.request.AuthRequest;
+import com.around.tdd.vo.request.MemberAuthDictionaryRequest;
+import com.around.tdd.vo.request.MemberAuthRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -16,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -41,12 +43,12 @@ public class AuthController {
     @PostMapping("/auth-number")
     public ResponseEntity<String> authNumber(@RequestBody AuthRequest authRequest) {
         Optional<Member> optionalMember = memberService.memberFindById(authRequest.getMemberSeq());
-        if(!optionalMember.isPresent()) {
+        if(optionalMember.isEmpty()) {
             return new ResponseEntity<>("사용자 정보가 없음",HttpUtil.createJsonHeaders(), HttpStatus.NO_CONTENT);
         }
         Member member = optionalMember.get();
         String authNumber = authService.getAuthNumber();
-        authService.saveAuth("auth-member:"+ authRequest.getMemberSeq(), authNumber);
+        authService.saveAuth(AuthType.AUTH_TYPE_MAP.get(authRequest.getAuthType())+":"+ authRequest.getMemberSeq(), authNumber);
         emailSendService.sendSimpleMessage(new MailDto("tdd@gmail.com", member.getMemberInfo().getEmail(), "인증번호", "인증번호:"+authNumber));
         return new ResponseEntity<>("인증번호 저장 성공",HttpUtil.createJsonHeaders(), HttpStatus.CREATED);
     }
@@ -61,7 +63,7 @@ public class AuthController {
     )
     @PostMapping("/auth-check")
     public ResponseEntity<String> authCheck(@RequestBody AuthRequest authRequest) {
-        boolean authCheck = authService.matchAuth("auth-member:"+ authRequest.getMemberSeq(), authRequest.getAuthNumber());
+        boolean authCheck = authService.matchAuth(AuthType.AUTH_TYPE_MAP.get(authRequest.getAuthType())+":"+ authRequest.getMemberSeq(), authRequest.getAuthNumber());
         if(!authCheck){
             return new ResponseEntity<>(String.valueOf(false),HttpUtil.createJsonHeaders(), HttpStatus.NO_CONTENT);
         }
@@ -88,4 +90,119 @@ public class AuthController {
         boolean authCheck = authService.matchAuth("auth-token:"+memberSeq, authToken);
         return new ResponseEntity<>(String.valueOf(authCheck), HttpUtil.createJsonHeaders(), authCheck ? HttpStatus.OK : HttpStatus.NO_CONTENT);
     }
+
+    @Operation(
+            summary = "회원 권한 입력 api"
+    )
+    @ApiResponses(value = {
+            @ApiResponse( responseCode = "201", description = "신규 권한 등록 성공"),
+    }
+    )
+    @PostMapping("/member-auth-dictionary")
+    public ResponseEntity<com.around.tdd.controller.response.ApiResponse<MemberAuthDictionary>>
+        insertMemberAuthDictionary(@RequestBody MemberAuthDictionaryRequest memberAuthDictionaryRequest) {
+
+        MemberAuthDictionary memberAuthDictionary = authService.insertMemberAuthDictionary(memberAuthDictionaryRequest.fromMemberAuthDictionary());
+        return new ResponseEntity<>(new com.around.tdd.controller.response.ApiResponse<>(Map.of("memberAuthDictionary", memberAuthDictionary), "신규 권한 등록 성공", HttpStatus.CREATED),HttpUtil.createJsonHeaders(), HttpStatus.CREATED);
+    }
+
+    @Operation(
+            summary = "회원 권한 매치 api"
+    )
+    @ApiResponses(value = {
+            @ApiResponse( responseCode = "201", description = "신규 권한 매치 성공"),
+    }
+    )
+    @PostMapping("/member-auth")
+    public ResponseEntity<com.around.tdd.controller.response.ApiResponse<MemberAuth>>
+    insertMemberAuth(@RequestBody MemberAuthRequest memberAuthRequest) {
+        var memberAuth = memberAuthRequest.fromMemberAuth();
+        return authService.matchMemberAuthDictionary(memberAuth);
+    }
+
+    @Operation(
+            summary = "권한 확인"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "권한 있음"),
+            @ApiResponse(responseCode = "204", description = "권한 없음")
+    })
+    @GetMapping("/member-auth-check")
+    public ResponseEntity<com.around.tdd.controller.response.ApiResponse<Boolean>> checkMemberAuth(
+            @RequestParam(value="memberSeq") Long memberSeq,
+            @RequestParam(value="memberAuthDictionarySeq") Long memberAuthDictionarySeq) {
+        Boolean result = authService.checkMemberAuth(memberSeq, memberAuthDictionarySeq);
+        if(!result){
+            return new ResponseEntity<>(new com.around.tdd.controller.response.ApiResponse<>(Map.of(), "권한 없음", HttpStatus.NO_CONTENT),HttpUtil.createJsonHeaders(), HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(new com.around.tdd.controller.response.ApiResponse<>(Map.of("result", result), "권한 있음", HttpStatus.OK), HttpUtil.createJsonHeaders(), HttpStatus.OK);
+    }
+
+    @Operation(
+            summary = "권한 확인"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "권한 삭제 완료"),
+            @ApiResponse(responseCode = "204", description = "권한 없음")
+    })
+    @DeleteMapping("/member-auth")
+    public ResponseEntity<com.around.tdd.controller.response.ApiResponse<MemberAuth>> removeMemberAuth(
+            @RequestParam(value="memberSeq") Long memberSeq,
+            @RequestParam(value="memberAuthDictionarySeq") Long memberAuthDictionarySeq) {
+        if (memberSeq <= 0 || memberAuthDictionarySeq <= 0) {
+            return new ResponseEntity<>(new com.around.tdd.controller.response.ApiResponse<>(Map.of(), "잘못된 요청", HttpStatus.BAD_REQUEST), HttpUtil.createJsonHeaders(), HttpStatus.BAD_REQUEST);
+        }
+        var optionalMemberAuth = authService.removeMemberAuth(memberSeq, memberAuthDictionarySeq);
+        return optionalMemberAuth.map(memberAuth -> new ResponseEntity<>(new com.around.tdd.controller.response.ApiResponse<>(Map.of("memberAuth", memberAuth), "권한 삭제 완료", HttpStatus.OK), HttpUtil.createJsonHeaders(), HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(new com.around.tdd.controller.response.ApiResponse<>(Map.of(), "권한 없음", HttpStatus.NO_CONTENT), HttpUtil.createJsonHeaders(), HttpStatus.NO_CONTENT));
+    }
+
+    @Operation(
+            summary = "조회 확인"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 완료"),
+            @ApiResponse(responseCode = "204", description = "인증 없음")
+    })
+    @GetMapping("/member-id")
+    public ResponseEntity<com.around.tdd.controller.response.ApiResponse<String>> getMemberId(
+            @RequestParam(value="memberSeq") Long memberSeq,
+            @RequestParam(value="authNumber") String authNumber,
+            @RequestParam(value="authType") AuthType authType) {
+        boolean authCheck = authService.matchAuth(AuthType.AUTH_TYPE_MAP.get(authType)+":"+ memberSeq, authNumber);
+        if(!authCheck){
+            return new ResponseEntity<>(new com.around.tdd.controller.response.ApiResponse<>(Map.of(), "인증번호 맞지 않음", HttpStatus.NO_CONTENT), HttpUtil.createJsonHeaders(), HttpStatus.NO_CONTENT);
+        }
+        var optionalMember = memberService.memberFindById(memberSeq);
+        return optionalMember.map(member -> new ResponseEntity<>(new com.around.tdd.controller.response.ApiResponse<>(Map.of("id", member.getId()), "조회 성공", HttpStatus.OK), HttpUtil.createJsonHeaders(), HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(new com.around.tdd.controller.response.ApiResponse<>(Map.of(), "사용자 없음", HttpStatus.NO_CONTENT), HttpUtil.createJsonHeaders(), HttpStatus.NO_CONTENT));
+    }
+
+    @Operation(
+            summary = "조회 확인"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 완료"),
+            @ApiResponse(responseCode = "204", description = "인증 없음")
+    })
+    @PutMapping("/member-password")
+    public ResponseEntity<com.around.tdd.controller.response.ApiResponse<String>> putMemberPassword(
+            @RequestParam(value="memberSeq") Long memberSeq,
+            @RequestParam(value="authNumber") String authNumber,
+            @RequestParam(value="authType") AuthType authType,
+            @RequestParam(value="password") String password) {
+        boolean authCheck = authService.matchAuth(AuthType.AUTH_TYPE_MAP.get(authType)+":"+ memberSeq, authNumber);
+        if(!authCheck){
+            return new ResponseEntity<>(new com.around.tdd.controller.response.ApiResponse<>(Map.of(), "인증번호 맞지 않음", HttpStatus.UNAUTHORIZED), HttpUtil.createJsonHeaders(), HttpStatus.UNAUTHORIZED);
+        }
+        boolean checkPassword = memberService.checkPassword(password);
+        if(!checkPassword){
+            return new ResponseEntity<>(new com.around.tdd.controller.response.ApiResponse<>(Map.of(), "패스워드 형식이 맞지 않음", HttpStatus.ACCEPTED), HttpUtil.createJsonHeaders(), HttpStatus.ACCEPTED);
+        }
+
+        var isChanged = memberService.changePassword(memberSeq, password);
+        return new ResponseEntity<>(new com.around.tdd.controller.response.ApiResponse<>(Map.of("isChanged", String.valueOf(isChanged)), "비밀번호 변경 완료", HttpStatus.OK), HttpUtil.createJsonHeaders(), HttpStatus.OK);
+    }
+
+
 }
