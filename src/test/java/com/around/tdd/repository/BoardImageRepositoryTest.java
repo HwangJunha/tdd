@@ -31,8 +31,7 @@ public class BoardImageRepositoryTest {
     @Rollback(value = false)
     public void saveBoardImage() {
         //given
-        Member member = Member
-                .builder()
+        Member member = Member.builder()
                 .id("yejin1224")
                 .password("1234560")
                 .state(1)

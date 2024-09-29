@@ -1,13 +1,19 @@
 package com.around.tdd.service;
 
+import com.around.tdd.exception.BoardNotFoundException;
 import com.around.tdd.exception.BoardSaveException;
 import com.around.tdd.repository.BoardContentRepository;
 import com.around.tdd.repository.BoardImageRepository;
 import com.around.tdd.repository.BoardRepository;
 import com.around.tdd.vo.*;
+import com.around.tdd.vo.request.BoardRequest;
+import com.around.tdd.vo.response.BoardDetailResponse;
+import com.around.tdd.vo.response.BoardListResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -35,15 +41,15 @@ public class BoardService {
 
 
     @Transactional
-    public Board savePost(BoardDTO boardDTO, List<MultipartFile> boardImages) {
+    public Board savePost(BoardRequest boardRequest, List<MultipartFile> boardImages) {
         // 유효성 체크
-        validateBoardRequest(boardDTO);
+        validateBoardRequest(boardRequest);
 
         // 게시판 작성
-        Board board = saveBoard(boardDTO);
+        Board board = saveBoard(boardRequest);
 
         // 게시글 작성
-        BoardContent boardContent = saveBoardContent(boardDTO, board);
+        BoardContent boardContent = saveBoardContent(boardRequest, board);
 
         // 게시글 이미지 작성
         if (boardImages != null && !boardImages.isEmpty()) {
@@ -53,16 +59,16 @@ public class BoardService {
         return board;
     }
 
-    public Board saveBoard(BoardDTO boardDTO) {
+    public Board saveBoard(BoardRequest boardRequest) {
         // TODO 회원 조회
-//        Member member = new Member();
-//        member.setMemberSeq(1L);
-//        member.setId("yejin1224");
-//        member.setPassword("123456");
+        Member member = Member.builder()
+                .id("yejin1224")
+                .password("123456")
+                .build();
 
         Board board = Board.builder()
-//                .member(member)
-                .title(boardDTO.getTitle())
+                .member(member)
+                .title(boardRequest.getTitle())
                 .views(0)
                 .inputDt(LocalDateTime.now())
                 .updateDT(LocalDateTime.now())
@@ -71,10 +77,10 @@ public class BoardService {
         return boardRepository.save(board);
     }
 
-    public BoardContent saveBoardContent(BoardDTO boardDTO, Board board) {
+    public BoardContent saveBoardContent(BoardRequest boardRequest, Board board) {
         BoardContent boardContent = BoardContent.builder()
                 .board(board)
-                .content(boardDTO.getContent())
+                .content(boardRequest.getContent())
                 .build();
 
         return boardContentRepository.save(boardContent);
@@ -100,24 +106,60 @@ public class BoardService {
         return boardImages;
     }
 
-    public Board findPostById(Long boardSeq) {
-        return boardRepository.findById(boardSeq).orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
+    public BoardDetailResponse getBoardById(Long boardSeq) {
+        Board board = boardRepository.findById(boardSeq).orElseThrow(() -> new BoardNotFoundException("게시글을 찾을 수 없습니다."));
+        BoardContent boardContent = boardContentRepository.findById(boardSeq).orElseThrow(() -> new BoardNotFoundException("게시글 내용을 찾을 수 없습니다."));
+
+        // 게시판 조회수 증가
+        board.incrementViewCount();
+        boardRepository.save(board);
+
+        BoardDetailResponse boardDetailResponse = BoardDetailResponse.builder()
+                .boardSeq(boardSeq)
+                .title(board.getTitle())
+                .content(boardContent.getContent())
+                .memberId("yejin1224")
+                .views(board.getViews())
+                .build();
+
+        return boardDetailResponse;
     }
 
-    public void validateBoardRequest(BoardDTO boardDTO) {
+    public void validateBoardRequest(BoardRequest boardRequest) {
         // 제목 길이 검증 (최대 1000자)
-        if (boardDTO.getTitle().length() > 1000) {
+        if (boardRequest.getTitle().length() > 1000) {
             throw new BoardSaveException("제목 유효성 검증에 실패 하였습니다.");
         }
 
         // 내용 길이 검증 (최대 160,000자)
-        if (boardDTO.getContent().length() > 160000) {
+        if (boardRequest.getContent().length() > 160000) {
             throw new BoardSaveException("게시글 유효성 검증에 실패 하였습니다.");
         }
 
         // 이모지 유효성 검증은 따로 필요 없지만, UTF-8/UTF-16 문자셋 지원 확인 가능
-        if (!StringUtils.hasText(boardDTO.getTitle()) || !StringUtils.hasText(boardDTO.getContent())) {
+        if (!StringUtils.hasText(boardRequest.getTitle()) || !StringUtils.hasText(boardRequest.getContent())) {
             throw new BoardSaveException("불가능한 문자셋입니다.");
         }
     }
+
+    // 페이징 처리된 게시판 리스트 반환
+    public List<BoardListResponse> getBoardList(Pageable pageable) {
+        List<BoardListResponse> boardListResponses = new ArrayList<>();
+        Page<Board> boardPage = boardRepository.findAll(pageable);
+
+        for (Board board: boardPage) {
+            BoardListResponse boardListResponse = BoardListResponse.builder()
+                    .boardSeq(board.getBoardSeq())
+                    .title(board.getTitle())
+                    .memberId(board.getMember().getId())
+                    .views(board.getViews())
+                    .inputDt(board.getInputDt())
+                    .build();
+
+            boardListResponses.add(boardListResponse);
+        }
+
+        return boardListResponses;
+    }
+
 }

@@ -32,8 +32,7 @@ public class BoardContentRepositoryTest {
     @Rollback(value = false)
     public void saveBoardContent() {
         //given
-        Member member = Member
-                .builder()
+        Member member = Member.builder()
                 .id("yejin1224")
                 .password("1234560")
                 .state(1)
