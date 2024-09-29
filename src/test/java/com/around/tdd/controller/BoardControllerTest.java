@@ -218,4 +218,55 @@ public class BoardControllerTest {
                 .andExpect(jsonPath("$.data.boardList[4].views").value(50)); // 다섯 번째 게시글 조회수 검증
     }
 
+    @Test
+    @DisplayName("게시판 수정 성공 테스트")
+    public void testUpdateBoardSuccess() throws Exception {
+        // Given
+        Long boardSeq = 1L;
+        BoardRequest boardRequest = BoardRequest.builder()
+                .boardSeq(boardSeq)
+                .title("Updated Title")
+                .content("Updated Content")
+                .build();
+
+        BoardDetailResponse boardResponse = BoardDetailResponse.builder()
+                .boardSeq(boardSeq)
+                .title("Updated Title")
+                .content("Updated Content")
+                .build();
+
+        when(boardService.updateBoard(any(BoardRequest.class))).thenReturn(boardResponse);
+
+        // When & Then
+        mockMvc.perform(MockMvcRequestBuilders.put(baseUrl + "/")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(boardRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.updatedBoard.boardSeq").value(boardSeq))
+                .andExpect(jsonPath("$.data.updatedBoard.title").value("Updated Title"))
+                .andExpect(jsonPath("$.data.updatedBoard.content").value("Updated Content"))
+                .andExpect(jsonPath("$.message").value("게시판 수정 성공"));
+    }
+
+    @Test
+    @DisplayName("게시판 수정 실패 테스트 - 게시글을 찾을 수 없는 경우")
+    public void testUpdateBoard_NotFound() throws Exception {
+        // Given
+        Long boardSeq = 1L;
+        BoardRequest boardRequest = BoardRequest.builder()
+                .boardSeq(boardSeq)
+                .memberId("yejin1224")
+                .title("Updated Title")
+                .content("Updated Content")
+                .build();
+
+        when(boardService.updateBoard(any(BoardRequest.class))).thenThrow(new BoardNotFoundException("해당 게시글을 찾을 수 없습니다."));
+
+        // When & Then
+        mockMvc.perform(MockMvcRequestBuilders.put(baseUrl + "/")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(boardRequest)))
+                .andExpect(status().isNoContent())
+                .andExpect(jsonPath("$.message").value("해당 게시글을 찾을 수 없습니다."));
+    }
 }

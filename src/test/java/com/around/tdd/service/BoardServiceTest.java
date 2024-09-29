@@ -1,6 +1,7 @@
 package com.around.tdd.service;
 
 
+import com.around.tdd.exception.BoardNotFoundException;
 import com.around.tdd.exception.BoardSaveException;
 import com.around.tdd.repository.BoardContentRepository;
 import com.around.tdd.repository.BoardImageRepository;
@@ -228,7 +229,7 @@ public class BoardServiceTest {
         when(boardRepository.findById(1L)).thenReturn(Optional.empty());
 
         //when
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+        BoardNotFoundException exception = assertThrows(BoardNotFoundException.class, () -> {
             boardService.getBoardById(boardSeq);
         });
 
@@ -250,7 +251,7 @@ public class BoardServiceTest {
         when(boardContentRepository.findById(boardSeq)).thenReturn(Optional.empty());
 
         // when
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+        BoardNotFoundException exception = assertThrows(BoardNotFoundException.class, () -> {
             boardService.getBoardById(boardSeq);
         });
 
@@ -384,5 +385,126 @@ public class BoardServiceTest {
 
         // then
         Assertions.assertEquals(1, board.getViews());
+    }
+    @Test
+    @DisplayName("게시판 수정 테스트 코드 작성")
+    public void testUpdateBoard() {
+        // Given
+        Long boardSeq = 1L;
+        // 멤버 설정
+        Member member = Member.builder()
+                .id("yejin1224")
+                .build();
+
+        Board existingBoard = Board.builder()
+                .boardSeq(boardSeq)
+                .title("Old Title")
+                .member(member)  // 가짜 멤버 생성
+                .views(100)
+                .updateDT(LocalDateTime.of(2024, 9, 29, 0, 0))
+                .build();
+
+        BoardContent existingBoardContent = BoardContent.builder()
+                .boardSeq(boardSeq)
+                .content("Old Content")
+                .board(existingBoard)
+                .build();
+
+        BoardRequest boardRequest = BoardRequest.builder()
+                .boardSeq(boardSeq)
+                .title("New Title")
+                .content("New Content")
+                .build();
+
+        // 기존 게시글과 게시글 내용을 반환하도록 설정
+        when(boardRepository.findById(boardSeq)).thenReturn(Optional.of(existingBoard));
+        when(boardContentRepository.findById(boardSeq)).thenReturn(Optional.of(existingBoardContent));
+
+        // When
+        BoardDetailResponse updatedBoard = boardService.updateBoard(boardRequest);
+
+        // Then
+        Assertions.assertNotNull(updatedBoard);  // 수정된 게시글이 반환되었는지 확인
+        Assertions.assertEquals("New Title", updatedBoard.getTitle());  // 제목이 수정되었는지 확인
+        Assertions.assertEquals("New Content", updatedBoard.getContent());  // 내용이 수정되었는지 확인
+
+        // 리포지토리가 한 번씩 호출되었는지 확인
+        verify(boardRepository, times(1)).save(any(Board.class));
+        verify(boardContentRepository, times(1)).save(any(BoardContent.class));
+    }
+
+    @Test
+    @DisplayName("게시글 수정 테스트 - 게시글 존재하지 않은 경우")
+    public void testUpdateBoardNotFound() {
+        // given
+        Long boardSeq = 1L;
+
+        BoardRequest boardRequest = BoardRequest.builder()
+                .boardSeq(boardSeq)
+                .title("New Title")
+                .content("New Content")
+                .build();
+
+        // 게시글이나 게시글 내용을 찾을 수 없는 경우
+        when(boardRepository.findById(boardSeq)).thenReturn(Optional.empty());
+        when(boardContentRepository.findById(boardSeq)).thenReturn(Optional.empty());
+
+        // when
+        BoardNotFoundException exception = assertThrows(BoardNotFoundException.class, () -> {
+            boardService.updateBoard(boardRequest);
+        });
+
+        // then
+        Assertions.assertEquals("해당 게시글을 찾을 수 없습니다.", exception.getMessage());
+
+        // 리포지토리가 저장되지 않았는지 확인
+        verify(boardRepository, never()).save(any(Board.class));
+        verify(boardContentRepository, never()).save(any(BoardContent.class));
+    }
+
+    @Test
+    @DisplayName("게시글 수정 테스트 - 부분 수정")
+    public void testUpdateBoardPartialUpdate() {
+        // given
+        Long boardSeq = 1L;
+
+        // 멤버 설정
+        Member member = Member.builder()
+                .id("yejin1224")
+                .build();
+
+        Board existingBoard = Board.builder()
+                .boardSeq(boardSeq)
+                .title("Old Title")
+                .member(member)  // 가짜 멤버 생성
+                .views(100)
+                .updateDT(LocalDateTime.of(2024, 9, 29, 0, 0))
+                .build();
+
+        BoardContent existingBoardContent = BoardContent.builder()
+                .boardSeq(boardSeq)
+                .content("Old Content")
+                .board(existingBoard)
+                .build();
+
+        BoardRequest boardRequest = BoardRequest.builder()
+                .boardSeq(boardSeq)
+                .title(null)
+                .content("New Content")
+                .build();
+
+        when(boardRepository.findById(boardSeq)).thenReturn(Optional.of(existingBoard));
+        when(boardContentRepository.findById(boardSeq)).thenReturn(Optional.of(existingBoardContent));
+
+        // when
+        BoardDetailResponse response = boardService.updateBoard(boardRequest);
+
+        // then
+        Assertions.assertEquals("Old Title", response.getTitle());  // 제목이 수정되지 않았는지 확인
+        Assertions.assertEquals("New Content", response.getContent());  // 내용이 수정되었는지 확인
+
+        // Verify the repository interactions
+        verify(boardRepository, times(1)).save(any(Board.class));
+        verify(boardContentRepository, times(1)).save(any(BoardContent.class));
     }
 }
