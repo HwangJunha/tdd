@@ -35,4 +35,8 @@ public class Board {
     @Column(name = "views")
     private int views;
 
+    public void incrementViewCount() {
+        this.views += 1;
+    }
+
 }

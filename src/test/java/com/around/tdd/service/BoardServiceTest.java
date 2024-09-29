@@ -10,7 +10,6 @@ import com.around.tdd.vo.*;
 import com.around.tdd.vo.request.BoardRequest;
 import com.around.tdd.vo.response.BoardDetailResponse;
 import com.around.tdd.vo.response.BoardListResponse;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -353,9 +352,37 @@ public class BoardServiceTest {
         return List.of(new MultipartFile[]{mockFile1, mockFile2});
     }
 
+    @Test
+    @DisplayName("게시판 조회수 정상 증가 테스트")
+    public void testIncrementView() {
+        // given
+        // 멤버 설정
+        Member member = Member.builder()
+                .id("yejin1224")
+                .build();
 
+        // 게시판 설정
+        Board board = Board.builder()
+                .boardSeq(1L)
+                .member(member)
+                .title("Test title")
+                .inputDt(LocalDateTime.now())
+                .updateDT(LocalDateTime.now())
+                .views(0)
+                .build();
 
+        BoardContent boardContent = BoardContent.builder()
+                .boardSeq(1L)
+                .content("content test")
+                .build();
 
+        when(boardRepository.findById(1L)).thenReturn(Optional.of(board));
+        when(boardContentRepository.findById(1L)).thenReturn(Optional.of(boardContent));
 
+        // when
+        boardService.getBoardById(1L);
 
+        // then
+        Assertions.assertEquals(1, board.getViews());
+    }
 }

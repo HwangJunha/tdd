@@ -14,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -111,6 +110,10 @@ public class BoardService {
         Board board = boardRepository.findById(boardSeq).orElseThrow(() -> new BoardNotFoundException("게시글을 찾을 수 없습니다."));
         BoardContent boardContent = boardContentRepository.findById(boardSeq).orElseThrow(() -> new BoardNotFoundException("게시글 내용을 찾을 수 없습니다."));
 
+        // 게시판 조회수 증가
+        board.incrementViewCount();
+        boardRepository.save(board);
+
         BoardDetailResponse boardDetailResponse = BoardDetailResponse.builder()
                 .boardSeq(boardSeq)
                 .title(board.getTitle())
@@ -158,4 +161,5 @@ public class BoardService {
 
         return boardListResponses;
     }
+
 }
