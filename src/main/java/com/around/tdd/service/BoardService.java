@@ -7,10 +7,14 @@ import com.around.tdd.repository.BoardImageRepository;
 import com.around.tdd.repository.BoardRepository;
 import com.around.tdd.vo.*;
 import com.around.tdd.vo.request.BoardRequest;
-import com.around.tdd.vo.response.BoardResponse;
+import com.around.tdd.vo.response.BoardDetailResponse;
+import com.around.tdd.vo.response.BoardListResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -103,11 +107,11 @@ public class BoardService {
         return boardImages;
     }
 
-    public BoardResponse getBoardById(Long boardSeq) {
+    public BoardDetailResponse getBoardById(Long boardSeq) {
         Board board = boardRepository.findById(boardSeq).orElseThrow(() -> new BoardNotFoundException("게시글을 찾을 수 없습니다."));
         BoardContent boardContent = boardContentRepository.findById(boardSeq).orElseThrow(() -> new BoardNotFoundException("게시글 내용을 찾을 수 없습니다."));
 
-        BoardResponse boardResponse = BoardResponse.builder()
+        BoardDetailResponse boardDetailResponse = BoardDetailResponse.builder()
                 .boardSeq(boardSeq)
                 .title(board.getTitle())
                 .content(boardContent.getContent())
@@ -115,7 +119,7 @@ public class BoardService {
                 .views(board.getViews())
                 .build();
 
-        return boardResponse;
+        return boardDetailResponse;
     }
 
     public void validateBoardRequest(BoardRequest boardRequest) {
@@ -133,5 +137,25 @@ public class BoardService {
         if (!StringUtils.hasText(boardRequest.getTitle()) || !StringUtils.hasText(boardRequest.getContent())) {
             throw new BoardSaveException("불가능한 문자셋입니다.");
         }
+    }
+
+    // 페이징 처리된 게시판 리스트 반환
+    public List<BoardListResponse> getBoardList(Pageable pageable) {
+        List<BoardListResponse> boardListResponses = new ArrayList<>();
+        Page<Board> boardPage = boardRepository.findAll(pageable);
+
+        for (Board board: boardPage) {
+            BoardListResponse boardListResponse = BoardListResponse.builder()
+                    .boardSeq(board.getBoardSeq())
+                    .title(board.getTitle())
+                    .memberId(board.getMember().getId())
+                    .views(board.getViews())
+                    .inputDt(board.getInputDt())
+                    .build();
+
+            boardListResponses.add(boardListResponse);
+        }
+
+        return boardListResponses;
     }
 }

@@ -8,9 +8,13 @@ import com.around.tdd.service.BoardService;
 import com.around.tdd.util.HttpUtil;
 import com.around.tdd.vo.Board;
 import com.around.tdd.vo.request.BoardRequest;
-import com.around.tdd.vo.response.BoardResponse;
+import com.around.tdd.vo.response.BoardDetailResponse;
+import com.around.tdd.vo.response.BoardListResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -64,13 +68,13 @@ public class BoardController {
         }
 
         @GetMapping("/detail")
-        public ResponseEntity<ApiResponse<BoardResponse>> getBoardDetail(@RequestParam(value="boardSeq") Long boardSeq) {
-                Map<String, BoardResponse> responseData = new HashMap<>();
-                BoardResponse boardResponse = boardService.getBoardById(boardSeq);
+        public ResponseEntity<ApiResponse<BoardDetailResponse>> getBoardDetail(@RequestParam(value="boardSeq") Long boardSeq) {
+                Map<String, BoardDetailResponse> responseData = new HashMap<>();
+                BoardDetailResponse boardDetailResponse = boardService.getBoardById(boardSeq);
 
-                responseData.put("boardDetail", boardResponse);
+                responseData.put("boardDetail", boardDetailResponse);
 
-                ApiResponse<BoardResponse> response = new ApiResponse<>(responseData, "게시글 상세 조회 성공", HttpStatus.OK);
+                ApiResponse<BoardDetailResponse> response = new ApiResponse<>(responseData, "게시글 상세 조회 성공", HttpStatus.OK);
                 return new ResponseEntity<>(response, headers, HttpStatus.OK);
         }
 
@@ -85,6 +89,16 @@ public class BoardController {
                 );
 
                 return new ResponseEntity<>(errorResponse, HttpStatus.NO_CONTENT);
+        }
+
+        @GetMapping("/list")
+        public ResponseEntity<ApiResponse<List<BoardListResponse>>> getBoardList(@PageableDefault(size = 10) Pageable pageable) {
+                Map<String, List<BoardListResponse>> responseData = new HashMap<>();
+                List<BoardListResponse> boardList = boardService.getBoardList(pageable);
+
+                responseData.put("boardList", boardList);
+                ApiResponse<List<BoardListResponse>> response = new ApiResponse<>(responseData, "게시판 목록 조회 성공", HttpStatus.OK);
+                return new ResponseEntity<>(response, headers, HttpStatus.OK);
         }
 
 }

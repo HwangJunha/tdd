@@ -8,7 +8,9 @@ import com.around.tdd.repository.BoardRepository;
 import com.around.tdd.repository.MemberRepository;
 import com.around.tdd.vo.*;
 import com.around.tdd.vo.request.BoardRequest;
-import com.around.tdd.vo.response.BoardResponse;
+import com.around.tdd.vo.response.BoardDetailResponse;
+import com.around.tdd.vo.response.BoardListResponse;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,10 +18,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -203,7 +210,7 @@ public class BoardServiceTest {
         when(boardContentRepository.findById(1L)).thenReturn(Optional.of(boardContent));
 
         // when
-        BoardResponse responseBoard = boardService.getBoardById(1L);
+        BoardDetailResponse responseBoard = boardService.getBoardById(1L);
 
         //then
         Assertions.assertNotNull(responseBoard);
@@ -302,10 +309,53 @@ public class BoardServiceTest {
         assertThrows(BoardSaveException.class, () -> boardService.savePost(boardRequest, mockFiles));
     }
 
+    @Test
+    @DisplayName("게시판 페이징 기능 테스트")
+    public void testGetBoardList() {
+        // Given
+        List<Board> boardList = new ArrayList<>();
+        for (int i = 1; i <= 10; i++) {
+            Member member = Member.builder()
+                    .id("member" + i)
+                    .build();
+
+            Board board = Board.builder()
+                    .boardSeq((long) i)
+                    .title("제목" + i)
+                    .member(member)
+                    .views(i)
+                    .inputDt(LocalDateTime.now())
+                    .build();
+
+            boardList.add(board);
+        }
+
+        Pageable pageable = PageRequest.of(0, 10); // 0번 페이지, 10개씩
+        Page<Board> page = new PageImpl<>(boardList.subList(0, 10), pageable, boardList.size());
+
+        when(boardRepository.findAll(pageable)).thenReturn(page);
+
+        // When
+        List<BoardListResponse> result = boardService.getBoardList(pageable);
+
+        // Then
+        Assertions.assertEquals(result.size(), 10);
+        Assertions.assertEquals("제목1", result.get(0).getTitle());
+        Assertions.assertEquals("member1", result.get(0).getMemberId());
+        Assertions.assertEquals(1, result.get(0).getViews());
+
+    }
+
     public List<MultipartFile> createMockImages() {
         MultipartFile mockFile1 = mock(MultipartFile.class);
         MultipartFile mockFile2 = mock(MultipartFile.class);
 
         return List.of(new MultipartFile[]{mockFile1, mockFile2});
     }
+
+
+
+
+
+
 }

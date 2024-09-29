@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Builder
-public class BoardResponse {
+public class BoardDetailResponse {
     private Long boardSeq;
     private  String memberId;
     private String title;
