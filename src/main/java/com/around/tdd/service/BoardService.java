@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 
 @Service
@@ -162,4 +163,41 @@ public class BoardService {
         return boardListResponses;
     }
 
+    public BoardDetailResponse updateBoard(BoardRequest boardRequest) {
+        Long boardSeq = boardRequest.getBoardSeq();
+        Optional<Board> boardOptional = boardRepository.findById(boardSeq);
+        Optional<BoardContent> boardContentOptional = boardContentRepository.findById(boardSeq);
+
+        // TODO 권한 추가
+
+        if (boardOptional.isPresent() && boardContentOptional.isPresent()) {
+            // 게시글 수정
+            Board board = Board.builder()
+                    .boardSeq(boardSeq)
+                    .title(boardRequest.getTitle() != null ? boardRequest.getTitle() : boardOptional.get().getTitle())
+                    .member(boardOptional.get().getMember())
+                    .views(boardOptional.get().getViews())
+                    .updateDT(LocalDateTime.now())
+                    .build();
+
+            // 게시글 내용 수정
+            BoardContent boardContent = BoardContent.builder()
+                    .boardSeq(boardSeq)
+                    .content(boardRequest.getContent() != null ? boardRequest.getContent() : boardContentOptional.get().getContent())
+                    .board(board)
+                    .build();
+
+            Board updatedBoard = boardRepository.save(board);
+            BoardContent updatedBoardContent = boardContentRepository.save(boardContent);
+
+
+            return BoardDetailResponse.builder()
+                    .boardSeq(boardSeq)
+                    .title(board.getTitle())
+                    .content(boardContent.getContent())
+                    .build();
+        } else {
+            throw new BoardNotFoundException("해당 게시글을 찾을 수 없습니다.");
+        }
+    }
 }

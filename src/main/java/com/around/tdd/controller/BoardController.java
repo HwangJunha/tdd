@@ -100,4 +100,14 @@ public class BoardController {
                 return new ResponseEntity<>(response, headers, HttpStatus.OK);
         }
 
+        @PutMapping("/")
+        public ResponseEntity<ApiResponse<BoardDetailResponse>> updateBoard(@RequestBody @Valid BoardRequest boardRequest) {
+                Map<String, BoardDetailResponse> responseData = new HashMap<>();
+                BoardDetailResponse boardResponse = boardService.updateBoard(boardRequest);
+
+                responseData.put("updatedBoard", boardResponse);
+
+                ApiResponse<BoardDetailResponse> response = new ApiResponse<>(responseData, "게시판 수정 성공", HttpStatus.OK);
+                return new ResponseEntity<>(response, headers, HttpStatus.OK);
+        }
 }
