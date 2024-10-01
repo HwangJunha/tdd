@@ -108,4 +108,29 @@ public class CartControllerTest {
         assertEquals(200, response.getStatusCodeValue());
         assertEquals(1, ((List<?>) response.getBody().get("cartList")).size());
     }
+
+    @Test
+    @DisplayName("장바구니 수정 성공 테스트")
+    void updateCartSuccessTest() throws Exception {
+        // given
+        Cart cart = new Cart();
+        cart.setCartSeq(1L);
+        cart.setMemberSeq(1L);
+        cart.setProductSeq(1L);
+        cart.setProductNum(1);
+
+        // when
+        when(cartService.updateCart(any(Cart.class))).thenReturn(cart);
+
+        // then
+        mockMvc.perform(post(baseUrl + "/cart-update")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(cart)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cartSeq").value(1L))
+                .andExpect(jsonPath("$.memberSeq").value(1L))
+                .andExpect(jsonPath("$.productSeq").value(1L))
+                .andExpect(jsonPath("$.productNum").value(1));
+    }
+
 }

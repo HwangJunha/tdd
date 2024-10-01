@@ -49,4 +49,15 @@ public class CartController {
         response.put("cartList", cartList);
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/cart-update")
+    public ResponseEntity<Cart> updateCartItem(@RequestBody @Valid Cart cart) {
+        if (cart.getCartSeq() == null) {
+            return ResponseEntity.badRequest().body(null);
+        }
+
+        Cart updatedCart = cartService.updateCart(cart);
+        return ResponseEntity.ok(updatedCart);
+    }
+
 }
