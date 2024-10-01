@@ -60,4 +60,14 @@ public class CartController {
         return ResponseEntity.ok(updatedCart);
     }
 
+    @DeleteMapping("/cart-delete/{cartSeq}")
+    public ResponseEntity<Map<String, Object>> deleteCartItem(@PathVariable Long cartSeq) {
+        if (cartSeq == null) {
+            return ResponseEntity.badRequest().body(null);
+        }
+
+        cartService.deleteCart(cartSeq);
+        return ResponseEntity.ok().build();
+    }
+
 }

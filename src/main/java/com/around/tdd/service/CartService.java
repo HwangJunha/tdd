@@ -47,4 +47,19 @@ public class CartService {
 
         return cartRepository.save(existingCart);
     }
+
+    @Transactional
+    public Integer deleteCart(Long memberSeq) {
+        if (memberSeq == null) {
+            throw new IllegalArgumentException("MemberSeq cannot be null or empty");
+        }
+
+        List<Cart> cartsToDelete = cartRepository.findByMemberSeq(memberSeq);
+        if (cartsToDelete.isEmpty()) {
+            throw new IllegalArgumentException("No cart found for the given MemberSeq");
+        }
+
+        cartRepository.deleteAll(cartsToDelete);
+        return cartsToDelete.size();
+    }
 }
