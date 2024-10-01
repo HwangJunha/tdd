@@ -79,4 +79,31 @@ class CartRepositoryTest {
         assertThat(optionalCart.get().getProductNum()).isEqualTo(productNum);
         assertThat(optionalCart.get().getMemberSeq()).isEqualTo(memberSeq);
     }
+
+
+    @DisplayName("장바구니 조회 성공")
+    @Test
+    @Rollback(value =false) //롤백을 비활성화하여 테스트 중에 발생한 변경 사항이 데이터베이스에 커밋됨
+    void getCartSuccess(){
+        //given
+        Long memberSeq = 1L;
+        Long productSeq = 1L;
+        int productNum = 100;
+
+        Cart cart = Cart.builder()
+                .memberSeq(memberSeq)
+                .productSeq(productSeq)
+                .productNum(productNum)
+                .build();
+
+        //when
+        Cart saveCart = cartRepository.save(cart);
+        Optional<Cart> optionalCart = cartRepository.findById(saveCart.getCartSeq());
+
+        //then
+        assertThat(optionalCart.isPresent()).isTrue();
+        assertThat(optionalCart.get().getProductSeq()).isEqualTo(productSeq);
+        assertThat(optionalCart.get().getProductNum()).isEqualTo(productNum);
+        assertThat(optionalCart.get().getMemberSeq()).isEqualTo(memberSeq);
+    }
 }

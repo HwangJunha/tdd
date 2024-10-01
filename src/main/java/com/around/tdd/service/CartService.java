@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class CartService {
@@ -22,10 +24,10 @@ public class CartService {
         return cartRepository.save(cart);
     }
 
-    public Cart getCartList(Long memberSeq) {
-        if(memberSeq == null) {
+    public List<Cart> getCartList(Long memberSeq) {
+        if (memberSeq == null) {
             throw new IllegalArgumentException("MemberSeq cannot be null or empty");
         }
-        return cartRepository.findById(memberSeq).orElse(null);
+        return cartRepository.findByMemberSeq(memberSeq);
     }
 }

@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -34,9 +35,18 @@ public class CartController {
     }
 
     @GetMapping("/cart-list")
-    public ResponseEntity<Map<String, Object>> getCartList(Long memberSeq) {
+    public ResponseEntity<Map<String, Object>> getCartList(@RequestParam Long memberSeq) {
+        if (memberSeq == null) {
+            return ResponseEntity.badRequest().body(null);
+        }
+
+        List<Cart> cartList = cartService.getCartList(memberSeq);
+        if (cartList.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+
         Map<String, Object> response = new HashMap<>();
-        response.put("cartList", cartService.getCartList(memberSeq));
+        response.put("cartList", cartList);
         return ResponseEntity.ok(response);
     }
 }
