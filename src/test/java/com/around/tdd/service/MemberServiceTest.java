@@ -18,8 +18,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -207,4 +206,107 @@ public class MemberServiceTest {
             verify(memberRepository, times(1)).save(member);
         }
     }
+    @Nested
+    class MemberInfoUpdateTest{
+        @Test
+        void testChangeMemberInfo_Success() {
+            // given
+            Long memberSeq = 1L;
+            String newName = "junha";
+            String newPhone = "010-1234-5678";
+            String newEmail = "junha@example.com";
+            String newNick = "junharu";
+            String newAddress = "신림동";
+            String newDetailAddress = "아덴빌 456";
+            String newPost = "12345";
+
+            MemberInfo mockMemberInfo = new MemberInfo();
+            mockMemberInfo.setName("Hwang");
+            mockMemberInfo.setPhone("010-0000-0000");
+            mockMemberInfo.setEmail("asd@example.com");
+            mockMemberInfo.setNick("old");
+            mockMemberInfo.setAddress("Old Address");
+            mockMemberInfo.setDetailAddress("Old Detail Address");
+            mockMemberInfo.setPost("00000");
+
+            Member mockMember = Member.builder().build();
+            mockMember.setMemberInfo(mockMemberInfo);
+
+            // mocking the repository response
+            when(memberRepository.findById(memberSeq)).thenReturn(Optional.of(mockMember));
+
+            // when
+            MemberInfo updatedMemberInfo = memberService.changeMemberInfo(memberSeq, newName, newPhone, newEmail, newNick, newAddress, newDetailAddress, newPost);
+
+            // then
+            assertNotNull(updatedMemberInfo);
+            assertEquals(newName, updatedMemberInfo.getName());
+            assertEquals(newPhone, updatedMemberInfo.getPhone());
+            assertEquals(newEmail, updatedMemberInfo.getEmail());
+            assertEquals(newNick, updatedMemberInfo.getNick());
+            assertEquals(newAddress, updatedMemberInfo.getAddress());
+            assertEquals(newDetailAddress, updatedMemberInfo.getDetailAddress());
+            assertEquals(newPost, updatedMemberInfo.getPost());
+
+            // verify that repository method was called once
+            verify(memberRepository, times(1)).findById(memberSeq);
+        }
+
+        @Test
+        void testChangeMemberInfo_MemberNotFound() {
+            // given
+            Long memberSeq = 1L;
+
+            // mocking the repository response
+            when(memberRepository.findById(memberSeq)).thenReturn(Optional.empty());
+
+            // when
+            MemberInfo result = memberService.changeMemberInfo(memberSeq, "Junha", null, null, null, null, null, null);
+
+            // then
+            assertNull(result);
+
+            // verify that repository method was called once
+            verify(memberRepository, times(1)).findById(memberSeq);
+        }
+
+        @Test
+        void testChangeMemberInfo_NoChanges() {
+            // given
+            Long memberSeq = 1L;
+
+            MemberInfo mockMemberInfo = new MemberInfo();
+            mockMemberInfo.setName("Junha");
+            mockMemberInfo.setPhone("010-1234-5678");
+            mockMemberInfo.setEmail("junha@example.com");
+            mockMemberInfo.setNick("Junha");
+            mockMemberInfo.setAddress("신림동");
+            mockMemberInfo.setDetailAddress("asd 456");
+            mockMemberInfo.setPost("12345");
+
+            Member mockMember = Member.builder().build();
+            mockMember.setMemberInfo(mockMemberInfo);
+
+            // mocking the repository response
+            when(memberRepository.findById(memberSeq)).thenReturn(Optional.of(mockMember));
+
+            // when
+            MemberInfo result = memberService.changeMemberInfo(memberSeq, null, null, null, null, null, null, null);
+
+            // then
+            assertNotNull(result);
+            assertEquals(mockMemberInfo.getName(), result.getName());
+            assertEquals(mockMemberInfo.getPhone(), result.getPhone());
+            assertEquals(mockMemberInfo.getEmail(), result.getEmail());
+            assertEquals(mockMemberInfo.getNick(), result.getNick());
+            assertEquals(mockMemberInfo.getAddress(), result.getAddress());
+            assertEquals(mockMemberInfo.getDetailAddress(), result.getDetailAddress());
+            assertEquals(mockMemberInfo.getPost(), result.getPost());
+
+            // verify that repository method was called once
+            verify(memberRepository, times(1)).findById(memberSeq);
+        }
+    }
+
+
 }

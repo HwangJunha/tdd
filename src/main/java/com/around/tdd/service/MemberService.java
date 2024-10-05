@@ -2,6 +2,7 @@ package com.around.tdd.service;
 
 import com.around.tdd.repository.MemberRepository;
 import com.around.tdd.vo.Member;
+import com.around.tdd.vo.MemberInfo;
 import com.around.tdd.vo.ValidationResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -97,5 +98,41 @@ public class MemberService {
         }
         savedMember.get().setPassword(newPassword);
         return true;
+    }
+
+
+    /**
+     * 사용자 정보 변경
+     * @param memberSeq - 사용자 번호
+     * @param name - 이름
+     * @param phone - 번호
+     * @param email - 이메일
+     * @param nick - 닉네임
+     * @param address - 주소
+     * @param detailAddress - 상세 주소
+     * @param post - 우편번호
+     * @return 수정된 회원정보
+     */
+    @Transactional
+    public MemberInfo changeMemberInfo(Long memberSeq,String name, String phone, String email, String nick, String address, String detailAddress, String post){
+        var savedMember = memberRepository.findById(memberSeq);
+        if(savedMember.isEmpty()){
+            return null;
+        }
+        if(name != null && !name.isBlank())
+            savedMember.get().getMemberInfo().setName(name);
+        if(phone != null && !phone.isEmpty())
+            savedMember.get().getMemberInfo().setPhone(phone);
+        if(email != null && !email.isEmpty())
+            savedMember.get().getMemberInfo().setEmail(email);
+        if(nick != null && !nick.isEmpty())
+            savedMember.get().getMemberInfo().setNick(nick);
+        if(address != null && !address.isEmpty())
+            savedMember.get().getMemberInfo().setAddress(address);
+        if(detailAddress != null && !detailAddress.isEmpty())
+            savedMember.get().getMemberInfo().setDetailAddress(detailAddress);
+        if(post != null && !post.isEmpty())
+            savedMember.get().getMemberInfo().setPost(post);
+        return savedMember.get().getMemberInfo();
     }
 }
