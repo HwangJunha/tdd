@@ -9,6 +9,7 @@ public enum AuthType {
     AUTH_NUMBER("auth-member"),
     FIND_MEMBER("find-member"),
     UPDATE_PASSWORD("update-password"),
+    UPDATE_MEMBER_INFO("update-member-info"),
     NONE("none");
 
     private final String redisKey;

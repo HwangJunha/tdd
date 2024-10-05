@@ -2,11 +2,13 @@ package com.around.tdd.service;
 
 import com.around.tdd.repository.MemberRepository;
 import com.around.tdd.vo.Member;
+import com.around.tdd.vo.MemberInfo;
 import com.around.tdd.vo.ValidationResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -97,5 +99,37 @@ public class MemberService {
         }
         savedMember.get().setPassword(newPassword);
         return true;
+    }
+
+
+    /**
+     * 사용자 정보 변경
+     * @param memberSeq - 사용자 번호
+     * @param name - 이름
+     * @param phone - 번호
+     * @param email - 이메일
+     * @param nick - 닉네임
+     * @param address - 주소
+     * @param detailAddress - 상세 주소
+     * @param post - 우편번호
+     * @return 수정된 회원정보
+     */
+    @Transactional
+    public MemberInfo changeMemberInfo(Long memberSeq,String name, String phone, String email, String nick, String address, String detailAddress, String post){
+        return memberRepository.findById(memberSeq)
+                .map(member -> {
+                    var memberInfo = member.getMemberInfo();
+                    // Input validation should be robust here
+                    if (name != null && !name.isBlank()) memberInfo.setName(name);
+                    if (phone != null && !phone.isBlank()) memberInfo.setPhone(phone);
+                    if (email != null && !email.isBlank()) memberInfo.setEmail(email);
+                    if (nick != null && !nick.isBlank()) memberInfo.setNick(nick);
+                    if (address != null && !address.isBlank()) memberInfo.setAddress(address);
+                    if (detailAddress != null && !detailAddress.isBlank()) memberInfo.setDetailAddress(detailAddress);
+                    if (post != null && !post.isBlank()) memberInfo.setPost(post);
+
+                    return memberInfo;
+                })
+                .orElseThrow(() -> new NoSuchElementException("No member found with id: " + memberSeq));
     }
 }
