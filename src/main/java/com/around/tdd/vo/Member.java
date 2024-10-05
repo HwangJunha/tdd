@@ -40,6 +40,9 @@ public class Member {
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<MemberAuth> memberAuthList;
 
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Seller> sellerList;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -63,6 +66,10 @@ public class Member {
 
     public void setMemberAuthList(List<MemberAuth> memberAuthList) {
         this.memberAuthList = memberAuthList;
+    }
+
+    public void setSellerList(List<Seller> sellerList) {
+        this.sellerList = sellerList;
     }
 
     public void setPassword(@NotNull String password) {
