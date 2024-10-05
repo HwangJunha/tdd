@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -115,24 +116,20 @@ public class MemberService {
      */
     @Transactional
     public MemberInfo changeMemberInfo(Long memberSeq,String name, String phone, String email, String nick, String address, String detailAddress, String post){
-        var savedMember = memberRepository.findById(memberSeq);
-        if(savedMember.isEmpty()){
-            return null;
-        }
-        if(name != null && !name.isBlank())
-            savedMember.get().getMemberInfo().setName(name);
-        if(phone != null && !phone.isEmpty())
-            savedMember.get().getMemberInfo().setPhone(phone);
-        if(email != null && !email.isEmpty())
-            savedMember.get().getMemberInfo().setEmail(email);
-        if(nick != null && !nick.isEmpty())
-            savedMember.get().getMemberInfo().setNick(nick);
-        if(address != null && !address.isEmpty())
-            savedMember.get().getMemberInfo().setAddress(address);
-        if(detailAddress != null && !detailAddress.isEmpty())
-            savedMember.get().getMemberInfo().setDetailAddress(detailAddress);
-        if(post != null && !post.isEmpty())
-            savedMember.get().getMemberInfo().setPost(post);
-        return savedMember.get().getMemberInfo();
+        return memberRepository.findById(memberSeq)
+                .map(member -> {
+                    var memberInfo = member.getMemberInfo();
+                    // Input validation should be robust here
+                    if (name != null && !name.isBlank()) memberInfo.setName(name);
+                    if (phone != null && !phone.isBlank()) memberInfo.setPhone(phone);
+                    if (email != null && !email.isBlank()) memberInfo.setEmail(email);
+                    if (nick != null && !nick.isBlank()) memberInfo.setNick(nick);
+                    if (address != null && !address.isBlank()) memberInfo.setAddress(address);
+                    if (detailAddress != null && !detailAddress.isBlank()) memberInfo.setDetailAddress(detailAddress);
+                    if (post != null && !post.isBlank()) memberInfo.setPost(post);
+
+                    return memberInfo;
+                })
+                .orElseThrow(() -> new NoSuchElementException("No member found with id: " + memberSeq));
     }
 }
