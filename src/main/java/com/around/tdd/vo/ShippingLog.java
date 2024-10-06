@@ -1,14 +1,17 @@
 package com.around.tdd.vo;
 
+import com.around.tdd.enums.ShippingStatusEnum;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 @Table(name = "ShippingLog")
 public class ShippingLog {
 
@@ -24,7 +27,7 @@ public class ShippingLog {
     @Column(name = "shipping_log_dt")
     private LocalDateTime shippingLogDt;
 
-    @ManyToOne
-    @JoinColumn(name = "shipping_status_seq", nullable = false)
-    private ShippingStatus shippingStatus;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private ShippingStatusEnum status;
 }

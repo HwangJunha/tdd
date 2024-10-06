@@ -1,15 +1,19 @@
 package com.around.tdd.vo;
 
+import com.around.tdd.enums.ShippingStatusEnum;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Setter
 @Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Table(name = "Shipping")
 public class Shipping {
 
@@ -18,7 +22,7 @@ public class Shipping {
     @Column(name = "shipping_seq", nullable = false)
     private Long shippingSeq;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_seq", nullable = false)
     private Order order;
 
@@ -28,9 +32,9 @@ public class Shipping {
     @Column(name = "address")
     private String address;
 
-    @ManyToOne
-    @JoinColumn(name = "shipping_status_seq", nullable = false)
-    private ShippingStatus shippingStatus;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private ShippingStatusEnum status;
 
     @Column(name = "detail_address")
     private String detailAddress;
@@ -42,5 +46,7 @@ public class Shipping {
     private String phone;
 
     @OneToMany(mappedBy = "shipping", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<ShippingLog> shippingLogs;
+    @Builder.Default
+    private List<ShippingLog> shippingLogs = new ArrayList<>();  // 리스트 초기화
+
 }
